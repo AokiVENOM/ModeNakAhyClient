@@ -6,6 +6,9 @@
 <title>Répartition des clients — Vente de Sacs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --bg-a:#0B1D3A;
@@ -153,8 +156,25 @@
   .user-bar #userName{color:var(--text); font-weight:500;}
   .user-bar .btn-cancel{padding:6px 14px; font-size:12px;}
 
+  .delete-account-btn{
+    color:var(--glass-coral);
+    border-color:rgba(255,140,107,0.35);
+  }
+  .delete-account-btn:hover{
+    background:rgba(255,140,107,0.12);
+    border-color:var(--glass-coral);
+  }
+
+  .pending-actions-row{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+
   .auth-center{
     min-height:82vh;
+    min-height:82svh;
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -312,6 +332,16 @@
 
   @media (max-width:480px){
     .auth-panel{padding:28px 22px 24px;}
+    .auth-center{
+      min-height:auto;
+      padding:36px 0 44px;
+      gap:30px;
+    }
+    .auth-mark{margin-bottom:14px;}
+    .auth-brand h1{font-size:26px;}
+    .auth-brand p{padding:0 12px; font-size:13px;}
+    .auth-tabs{margin-bottom:22px;}
+    .auth-form{gap:16px;}
   }
 
   .glass{
@@ -635,6 +665,24 @@
   }
   .summary-item.no-frais .s-val{color:var(--glass-cyan);}
   .summary-item.with-frais .s-val{color:var(--glass-coral);}
+
+  .export-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:18px;
+    padding-top:16px;
+    border-top:1px solid rgba(255,255,255,0.09);
+    width:100%;
+  }
+  .export-btn{
+    padding:9px 16px;
+    font-size:13px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .export-btn:disabled{opacity:0.5; cursor:not-allowed;}
   .table-scroll{
     overflow-x:auto;
     -webkit-overflow-scrolling:touch;
@@ -819,6 +867,7 @@
   /* Responsive: mobile */
   @media (max-width:600px){
     body{padding:24px 12px 60px;}
+    input, select{font-size:16px; height:44px;}
     .eyebrow{font-size:10px;}
     header p{font-size:13px; padding:0 6px;}
     .stats{grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:24px;}
@@ -846,7 +895,7 @@
       margin-bottom:14px;
     }
     .history-manual span{width:100%; font-size:11px;}
-    .history-manual select{flex:1; min-width:0; height:40px; font-size:12px; padding:6px 8px;}
+    .history-manual select{flex:1; min-width:0; height:44px; font-size:16px; padding:6px 8px;}
     .history-pill{padding:7px 13px; font-size:12px;}
   }
 </style>
@@ -940,7 +989,10 @@
       <h1 id="pendingTitle">Compte en attente de validation</h1>
       <p id="pendingText">Un membre de l'équipe doit approuver votre compte livreur avant que vous puissiez accéder à l'application.</p>
     </div>
-    <button type="button" class="btn-cancel" id="pendingLogoutBtn" style="display:inline-block;">Déconnexion</button>
+    <div class="pending-actions-row">
+      <button type="button" class="btn-cancel" id="pendingLogoutBtn" style="display:inline-block;">Déconnexion</button>
+      <button type="button" class="btn-cancel delete-account-btn" id="pendingDeleteAccountBtn" style="display:inline-block;">Supprimer mon compte</button>
+    </div>
   </div>
 </div>
 
@@ -954,6 +1006,7 @@
     <div class="user-bar">
       <span id="userName"></span>
       <button type="button" id="logoutBtn" class="btn-cancel" style="display:inline-block;">Déconnexion</button>
+      <button type="button" id="deleteAccountBtn" class="btn-cancel delete-account-btn" style="display:inline-block;">Supprimer mon compte</button>
     </div>
   </header>
 
@@ -1124,6 +1177,10 @@
         <span class="s-val" id="sumWithFrais">0 Ar</span>
       </div>
     </div>
+    <div class="export-row">
+      <button type="button" class="btn-cancel export-btn" id="exportPdfBtn" style="display:inline-flex;">📄 Télécharger PDF</button>
+      <button type="button" class="btn-cancel export-btn" id="exportExcelBtn" style="display:inline-flex;">📊 Télécharger Excel</button>
+    </div>
   </div>
 
   <p style="text-align:center; font-size:12px; color:var(--text-dim); margin-top:10px;">Cliquez sur un client pour voir tous les détails.</p>
@@ -1140,7 +1197,8 @@
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   import {
     getAuth, onAuthStateChanged, signInWithEmailAndPassword,
-    createUserWithEmailAndPassword, updateProfile, signOut, sendPasswordResetEmail
+    createUserWithEmailAndPassword, updateProfile, signOut, sendPasswordResetEmail,
+    deleteUser, reauthenticateWithCredential, EmailAuthProvider
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
   // ============================================================
@@ -1208,6 +1266,8 @@
   const userNameEl = document.getElementById('userName');
   const logoutBtn = document.getElementById('logoutBtn');
   const presenceBadge = document.getElementById('presenceBadge');
+  const exportPdfBtn = document.getElementById('exportPdfBtn');
+  const exportExcelBtn = document.getElementById('exportExcelBtn');
   const presenceCountEl = document.getElementById('presenceCount');
   const statTotalCard = document.getElementById('statTotalCard');
   const tableSummary = document.getElementById('tableSummary');
@@ -1216,6 +1276,8 @@
   const pendingTitle = document.getElementById('pendingTitle');
   const pendingText = document.getElementById('pendingText');
   const pendingLogoutBtn = document.getElementById('pendingLogoutBtn');
+  const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+  const pendingDeleteAccountBtn = document.getElementById('pendingDeleteAccountBtn');
   const pendingRequestsPanel = document.getElementById('pendingRequestsPanel');
   const pendingRequestsList = document.getElementById('pendingRequestsList');
   let unsubscribeSnapshot = null;
@@ -1349,10 +1411,11 @@
         const d = snap.data();
         return { role: d.role || 'equipe', status: d.status || 'approved' };
       }
+      return { role: 'equipe', status: 'approved' };
     } catch (err) {
       console.error(err);
+      return { role: 'unknown', status: 'error' };
     }
-    return { role: 'equipe', status: 'approved' };
   }
 
   let pendingRequestsUnsub = null;
@@ -1404,6 +1467,18 @@
     currentUserRole = role;
     currentUserStatus = status;
     loginView.style.display = 'none';
+
+    if(status === 'error'){
+      appView.style.display = 'none';
+      pendingView.style.display = 'block';
+      pendingIcon.textContent = '⚠️';
+      pendingTitle.textContent = 'Impossible de vérifier votre compte';
+      pendingText.textContent = "Une erreur de connexion empêche de vérifier votre accès pour le moment. Réessayez dans un instant, ou contactez un membre de l'équipe si ça persiste.";
+      if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+      stopPresence();
+      stopPendingRequestsWatch();
+      return;
+    }
 
     if(role === 'livreur' && status !== 'approved'){
       appView.style.display = 'none';
@@ -1583,6 +1658,45 @@
 
   logoutBtn.addEventListener('click', performLogout);
   pendingLogoutBtn.addEventListener('click', performLogout);
+
+  async function wipeUserData(uid){
+    try { await deleteDoc(doc(db, 'users', uid)); } catch (err) { console.error(err); }
+    try { await deleteDoc(doc(db, 'presence', uid)); } catch (err) { console.error(err); }
+  }
+
+  async function performDeleteAccount(){
+    const user = auth?.currentUser;
+    if(!user) return;
+
+    if(!confirm('Supprimer définitivement votre compte ? Cette action est irréversible : vos accès seront perdus.')) return;
+    const typed = prompt('Pour confirmer, tapez SUPPRIMER en majuscules :');
+    if(typed !== 'SUPPRIMER') return;
+
+    try {
+      await wipeUserData(user.uid);
+      await deleteUser(user);
+    } catch (err) {
+      if(err.code === 'auth/requires-recent-login'){
+        const password = prompt('Pour des raisons de sécurité, entrez votre mot de passe pour confirmer :');
+        if(!password){ return; }
+        try {
+          const credential = EmailAuthProvider.credential(user.email, password);
+          await reauthenticateWithCredential(user, credential);
+          await wipeUserData(user.uid);
+          await deleteUser(user);
+        } catch (err2) {
+          console.error(err2);
+          alert('Suppression impossible : ' + authErrorMessage(err2));
+        }
+      } else {
+        console.error(err);
+        alert('Une erreur est survenue pendant la suppression du compte.');
+      }
+    }
+  }
+
+  deleteAccountBtn.addEventListener('click', performDeleteAccount);
+  pendingDeleteAccountBtn.addEventListener('click', performDeleteAccount);
 
   if(auth){
     onAuthStateChanged(auth, async (user) => {
@@ -1812,14 +1926,100 @@
     render();
   }
 
-  function render(){
+  function getFilteredOrders(){
     const term = searchInput.value.trim().toLowerCase();
-    const filtered = orders.filter(o => {
+    return orders.filter(o => {
       const matchesSearch = o.nom.toLowerCase().includes(term) ||
         o.produits.some(p => p.nom.toLowerCase().includes(term));
       const matchesHistory = !historyFilter || (o.dateCommande && o.dateCommande.startsWith(historyFilter));
       return matchesSearch && matchesHistory;
     });
+  }
+
+  function exportFileName(ext){
+    const period = historyFilter || 'toutes-periodes';
+    return `ventes-mode-nakahy-${period}.${ext}`;
+  }
+
+  function exportPDF(){
+    if(!window.jspdf){ alert("La librairie PDF n'a pas pu se charger. Vérifiez votre connexion internet."); return; }
+    const list = getFilteredOrders();
+    const { jsPDF } = window.jspdf;
+    const docPdf = new jsPDF();
+
+    docPdf.setFontSize(16);
+    docPdf.text('Mode Nak\'Ahy — Répartition des clients', 14, 18);
+    docPdf.setFontSize(11);
+    docPdf.setTextColor(100);
+    docPdf.text(`Période : ${filterLabel(historyFilter)}`, 14, 26);
+
+    const rows = list.map(o => [
+      o.nom,
+      o.tel || '—',
+      o.produits.map(p => `${p.nom} (${formatAr(p.prix)})`).join(', '),
+      formatAr(orderGrandTotal(o)),
+      badgeMeta[o.statut]?.label || o.statut,
+      paiementLabels[o.modePaiement] || '—',
+      o.lieu || '—',
+      o.fraisLivraison ? formatAr(o.fraisMontant) : 'Gratuite'
+    ]);
+
+    docPdf.autoTable({
+      startY: 32,
+      head: [['Client', 'Téléphone', 'Produits', 'Total', 'Statut', 'Paiement', 'Lieu', 'Frais']],
+      body: rows,
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [18, 59, 79] },
+      alternateRowStyles: { fillColor: [245, 248, 248] }
+    });
+
+    const sumNoFrais = list.reduce((s, o) => s + produitsTotal(o), 0);
+    const sumWithFrais = list.reduce((s, o) => s + orderGrandTotal(o), 0);
+    const finalY = docPdf.lastAutoTable ? docPdf.lastAutoTable.finalY : 32;
+
+    docPdf.setFontSize(11);
+    docPdf.setTextColor(30);
+    docPdf.text(`Total sans frais de livraison : ${formatAr(sumNoFrais)}`, 14, finalY + 12);
+    docPdf.text(`Total avec frais de livraison : ${formatAr(sumWithFrais)}`, 14, finalY + 20);
+
+    docPdf.save(exportFileName('pdf'));
+  }
+
+  function exportExcel(){
+    if(!window.XLSX){ alert("La librairie Excel n'a pas pu se charger. Vérifiez votre connexion internet."); return; }
+    const list = getFilteredOrders();
+
+    const data = list.map(o => ({
+      'Client': o.nom,
+      'Téléphone': o.tel || '',
+      'Produits': o.produits.map(p => `${p.nom} (${p.prix} Ar)`).join(', '),
+      'Total (Ar)': orderGrandTotal(o),
+      'Statut': badgeMeta[o.statut]?.label || o.statut,
+      'Mode de paiement': paiementLabels[o.modePaiement] || '',
+      'Date de commande': o.dateCommande || '',
+      'Date de livraison': o.dateLivraison || '',
+      'Lieu de livraison': o.lieu || '',
+      'Frais de livraison (Ar)': o.fraisLivraison ? o.fraisMontant : 0,
+      'Ajouté par': o.ajoutePar || ''
+    }));
+
+    const sumNoFrais = list.reduce((s, o) => s + produitsTotal(o), 0);
+    const sumWithFrais = list.reduce((s, o) => s + orderGrandTotal(o), 0);
+    data.push({});
+    data.push({ 'Client': 'TOTAL SANS FRAIS', 'Total (Ar)': sumNoFrais });
+    data.push({ 'Client': 'TOTAL AVEC FRAIS', 'Total (Ar)': sumWithFrais });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Ventes');
+    XLSX.writeFile(wb, exportFileName('xlsx'));
+  }
+
+  exportPdfBtn.addEventListener('click', exportPDF);
+  exportExcelBtn.addEventListener('click', exportExcel);
+
+  function render(){
+    const filtered = getFilteredOrders();
 
     const nameCounts = {};
     orders.forEach(o => {
