@@ -229,6 +229,56 @@
   .auth-form .field{flex:0 0 auto; min-width:0;}
   .auth-submit{width:100%; margin-top:6px; padding:13px 18px;}
 
+  .role-pills{display:flex; gap:8px;}
+  .role-pill{
+    flex:1;
+    background:rgba(255,255,255,0.05);
+    border:1px solid var(--panel-border);
+    color:var(--text-dim);
+    padding:10px;
+    border-radius:12px;
+    font-size:13px;
+    font-weight:600;
+  }
+  .role-pill.active{
+    background:rgba(79,216,224,0.15);
+    color:var(--glass-cyan);
+    border-color:var(--glass-cyan);
+  }
+
+  .pending-requests{
+    padding:20px 22px;
+    margin-bottom:24px;
+    border-color:rgba(255,140,107,0.4);
+  }
+  .pending-requests-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--glass-coral);
+    margin-bottom:14px;
+  }
+  .pending-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 0;
+    border-top:1px solid rgba(255,255,255,0.09);
+  }
+  .pending-row:first-child{border-top:none; padding-top:0;}
+  .pending-name{font-weight:600; font-size:14px;}
+  .pending-email{font-size:12px; color:var(--text-dim);}
+  .pending-actions{display:flex; gap:8px;}
+  .pending-actions button{padding:8px 16px; font-size:13px;}
+
+  @media (max-width:600px){
+    .pending-row{flex-direction:column; align-items:flex-start;}
+    .pending-actions{width:100%;}
+    .pending-actions button{flex:1;}
+  }
+
   .auth-error{
     color:var(--glass-coral);
     font-size:13px;
@@ -855,6 +905,14 @@
           <label for="signupPassword">Mot de passe</label>
           <input type="password" id="signupPassword" placeholder="6 caractères minimum" required>
         </div>
+        <div class="field">
+          <label>Rôle</label>
+          <div class="role-pills">
+            <button type="button" class="role-pill active" data-role="equipe">Équipe</button>
+            <button type="button" class="role-pill" data-role="livreur">Livreur</button>
+          </div>
+          <input type="hidden" id="signupRole" value="equipe">
+        </div>
         <button type="submit" class="btn-add auth-submit">Créer mon compte</button>
       </form>
 
@@ -874,6 +932,18 @@
   </div>
 </div>
 
+<div class="wrap" id="pendingView" style="display:none;">
+  <div class="auth-center">
+    <div class="auth-brand">
+      <div class="auth-mark" id="pendingIcon">⏳</div>
+      <div class="eyebrow">Vente de Sacs</div>
+      <h1 id="pendingTitle">Compte en attente de validation</h1>
+      <p id="pendingText">Un membre de l'équipe doit approuver votre compte livreur avant que vous puissiez accéder à l'application.</p>
+    </div>
+    <button type="button" class="btn-cancel" id="pendingLogoutBtn" style="display:inline-block;">Déconnexion</button>
+  </div>
+</div>
+
 <div class="wrap" id="appView" style="display:none;">
 
   <header>
@@ -886,6 +956,11 @@
       <button type="button" id="logoutBtn" class="btn-cancel" style="display:inline-block;">Déconnexion</button>
     </div>
   </header>
+
+  <div class="glass pending-requests" id="pendingRequestsPanel" style="display:none;">
+    <div class="pending-requests-label">Demandes de compte livreur en attente</div>
+    <div id="pendingRequestsList"></div>
+  </div>
 
   <div class="stats">
     <div class="glass stat">
@@ -900,7 +975,7 @@
       <span class="num" id="statAttente">0</span>
       <span class="label">En attente</span>
     </div>
-    <div class="glass stat coral">
+    <div class="glass stat coral" id="statTotalCard">
       <span class="num" id="statTotal">0</span>
       <span class="label">Total (Ar)</span>
     </div>
@@ -1060,8 +1135,8 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getFirestore, collection, addDoc, setDoc, updateDoc, deleteDoc, doc,
-    onSnapshot, serverTimestamp
+    getFirestore, collection, addDoc, setDoc, getDoc, updateDoc, deleteDoc, doc,
+    onSnapshot, serverTimestamp, query, where
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   import {
     getAuth, onAuthStateChanged, signInWithEmailAndPassword,
@@ -1101,6 +1176,8 @@
   let editingId = null;
   let expandedId = null;
   let historyFilter = null;
+  let currentUserRole = 'equipe';
+  let currentUserStatus = 'approved';
 
   const form = document.getElementById('orderForm');
   const formPanel = document.getElementById('formPanel');
@@ -1132,6 +1209,15 @@
   const logoutBtn = document.getElementById('logoutBtn');
   const presenceBadge = document.getElementById('presenceBadge');
   const presenceCountEl = document.getElementById('presenceCount');
+  const statTotalCard = document.getElementById('statTotalCard');
+  const tableSummary = document.getElementById('tableSummary');
+  const pendingView = document.getElementById('pendingView');
+  const pendingIcon = document.getElementById('pendingIcon');
+  const pendingTitle = document.getElementById('pendingTitle');
+  const pendingText = document.getElementById('pendingText');
+  const pendingLogoutBtn = document.getElementById('pendingLogoutBtn');
+  const pendingRequestsPanel = document.getElementById('pendingRequestsPanel');
+  const pendingRequestsList = document.getElementById('pendingRequestsList');
   let unsubscribeSnapshot = null;
 
   const iconEdit = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
@@ -1250,6 +1336,104 @@
     presenceBadge.style.display = 'flex';
   }
 
+  function applyRoleUI(){
+    const isLivreur = currentUserRole === 'livreur';
+    if(statTotalCard) statTotalCard.style.display = isLivreur ? 'none' : '';
+    if(tableSummary) tableSummary.style.display = isLivreur ? 'none' : '';
+  }
+
+  async function fetchUserRoleData(uid){
+    try {
+      const snap = await getDoc(doc(db, 'users', uid));
+      if(snap.exists()){
+        const d = snap.data();
+        return { role: d.role || 'equipe', status: d.status || 'approved' };
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    return { role: 'equipe', status: 'approved' };
+  }
+
+  let pendingRequestsUnsub = null;
+
+  function startPendingRequestsWatch(){
+    if(pendingRequestsUnsub) return;
+    pendingRequestsUnsub = onSnapshot(
+      query(collection(db, 'users'), where('status', '==', 'pending')),
+      (snapshot) => renderPendingRequests(snapshot.docs.map(d => ({ uid: d.id, ...d.data() }))),
+      (err) => console.error(err)
+    );
+  }
+
+  function stopPendingRequestsWatch(){
+    if(pendingRequestsUnsub){ pendingRequestsUnsub(); pendingRequestsUnsub = null; }
+    pendingRequestsPanel.style.display = 'none';
+    pendingRequestsList.innerHTML = '';
+  }
+
+  function renderPendingRequests(reqs){
+    pendingRequestsPanel.style.display = reqs.length > 0 ? 'block' : 'none';
+    pendingRequestsList.innerHTML = '';
+    reqs.forEach(r => {
+      const row = document.createElement('div');
+      row.className = 'pending-row';
+      row.innerHTML = `
+        <div>
+          <div class="pending-name">${escapeHtml(r.name || r.email || 'Sans nom')}</div>
+          <div class="pending-email">${escapeHtml(r.email || '')} · veut rejoindre en tant que livreur</div>
+        </div>
+        <div class="pending-actions">
+          <button type="button" class="btn-add">Approuver</button>
+          <button type="button" class="btn-cancel" style="display:inline-block;">Refuser</button>
+        </div>
+      `;
+      row.querySelector('.btn-add').addEventListener('click', async () => {
+        try { await updateDoc(doc(db, 'users', r.uid), { status: 'approved' }); }
+        catch (err) { console.error(err); alert("Erreur lors de l'approbation."); }
+      });
+      row.querySelector('.btn-cancel').addEventListener('click', async () => {
+        try { await updateDoc(doc(db, 'users', r.uid), { status: 'rejected' }); }
+        catch (err) { console.error(err); alert('Erreur lors du refus.'); }
+      });
+      pendingRequestsList.appendChild(row);
+    });
+  }
+
+  function routeAfterAuth(user, role, status){
+    currentUserRole = role;
+    currentUserStatus = status;
+    loginView.style.display = 'none';
+
+    if(role === 'livreur' && status !== 'approved'){
+      appView.style.display = 'none';
+      pendingView.style.display = 'block';
+      if(status === 'rejected'){
+        pendingIcon.textContent = '✕';
+        pendingTitle.textContent = 'Demande refusée';
+        pendingText.textContent = "Votre demande d'accès en tant que livreur a été refusée par l'équipe. Contactez un membre de l'équipe si vous pensez qu'il s'agit d'une erreur.";
+      } else {
+        pendingIcon.textContent = '⏳';
+        pendingTitle.textContent = 'Compte en attente de validation';
+        pendingText.textContent = "Un membre de l'équipe doit approuver votre compte livreur avant que vous puissiez accéder à l'application.";
+      }
+      if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+      stopPresence();
+      stopPendingRequestsWatch();
+      return;
+    }
+
+    pendingView.style.display = 'none';
+    appView.style.display = 'block';
+    userNameEl.textContent = role === 'livreur'
+      ? `${user.displayName || user.email} · Livreur`
+      : (user.displayName || user.email);
+    applyRoleUI();
+    if(!unsubscribeSnapshot) startListening();
+    startPresence();
+    if(role === 'equipe') startPendingRequestsWatch(); else stopPendingRequestsWatch();
+  }
+
   function startPresence(){
     touchPresence();
     presenceHeartbeat = setInterval(touchPresence, 25000);
@@ -1318,6 +1502,14 @@
     });
   });
 
+  document.querySelectorAll('.role-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.role-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      document.getElementById('signupRole').value = pill.dataset.role;
+    });
+  });
+
   forgotBtn.addEventListener('click', () => {
     authTabsEl.style.display = 'none';
     loginForm.style.display = 'none';
@@ -1368,37 +1560,47 @@
     const nom = document.getElementById('signupNom').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value;
+    const role = document.getElementById('signupRole').value;
+    const status = role === 'livreur' ? 'pending' : 'approved';
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: nom });
-      userNameEl.textContent = nom;
+      await setDoc(doc(db, 'users', cred.user.uid), { name: nom, email, role, status });
+      routeAfterAuth(cred.user, role, status);
     } catch (err) {
       console.error(err.code, err.message);
       authError.textContent = authErrorMessage(err);
     }
   });
 
-  logoutBtn.addEventListener('click', async () => {
+  async function performLogout(){
     const uid = auth?.currentUser?.uid;
     if(uid){
       try { await deleteDoc(doc(db, 'presence', uid)); } catch (err) { console.error(err); }
     }
     signOut(auth);
-  });
+  }
+
+  logoutBtn.addEventListener('click', performLogout);
+  pendingLogoutBtn.addEventListener('click', performLogout);
 
   if(auth){
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if(user){
-        loginView.style.display = 'none';
-        appView.style.display = 'block';
-        userNameEl.textContent = user.displayName || user.email;
-        if(!unsubscribeSnapshot) startListening();
-        startPresence();
+        const { role, status } = await fetchUserRoleData(user.uid);
+        routeAfterAuth(user, role, status);
       } else {
         appView.style.display = 'none';
+        pendingView.style.display = 'none';
         loginView.style.display = 'block';
         if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
         stopPresence();
+        stopPendingRequestsWatch();
+        currentUserRole = 'equipe';
+        currentUserStatus = 'approved';
+        document.querySelectorAll('.role-pill').forEach(p => p.classList.remove('active'));
+        document.querySelector('.role-pill[data-role="equipe"]').classList.add('active');
+        document.getElementById('signupRole').value = 'equipe';
         orders = [];
         editingId = null;
         expandedId = null;
@@ -1681,6 +1883,9 @@
         if(isOpen){
           const dtr = document.createElement('tr');
           dtr.className = 'detail-row';
+          const ajoutePar = currentUserRole !== 'livreur'
+            ? `<div class="detail-item"><div class="d-key">Ajouté par</div><div class="d-val">${escapeHtml(o.ajoutePar) || '—'}</div></div>`
+            : '';
           dtr.innerHTML = `
             <td colspan="5">
               <div class="detail-box">
@@ -1689,7 +1894,7 @@
                 <div class="detail-item"><div class="d-key">Date de livraison</div><div class="d-val">${formatDate(o.dateLivraison)}</div></div>
                 <div class="detail-item"><div class="d-key">Lieu de livraison</div><div class="d-val">${escapeHtml(o.lieu) || '—'}</div></div>
                 <div class="detail-item"><div class="d-key">Frais de livraison</div><div class="d-val">${o.fraisLivraison ? formatAr(o.fraisMontant) : 'Gratuite'}</div></div>
-                <div class="detail-item"><div class="d-key">Ajouté par</div><div class="d-val">${escapeHtml(o.ajoutePar) || '—'}</div></div>
+                ${ajoutePar}
               </div>
             </td>
           `;
