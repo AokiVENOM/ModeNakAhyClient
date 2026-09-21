@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Répartition des clients — Vente de Sacs</title>
+<title>Répartition des clients — Mode Nak'Ahy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -39,6 +39,16 @@
     background-attachment:fixed;
     overflow-x:hidden;
     padding:40px 20px 80px;
+    transition:background 0.6s ease;
+  }
+
+  body.livreur-theme{
+    background:
+      radial-gradient(circle at 15% 20%, rgba(214,164,90,0.28), transparent 40%),
+      radial-gradient(circle at 85% 10%, rgba(230,126,34,0.2), transparent 45%),
+      radial-gradient(circle at 70% 80%, rgba(214,164,90,0.18), transparent 40%),
+      linear-gradient(160deg, #4A2F1F, #6B4423);
+    background-attachment:fixed;
   }
 
   .blob{
@@ -117,6 +127,47 @@
   @keyframes presencePulse{
     0%,100%{opacity:1;}
     50%{opacity:0.35;}
+  }
+
+  .scroll-top-btn{
+    position:fixed;
+    bottom:24px;
+    right:24px;
+    z-index:40;
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.08);
+    border:1px solid var(--panel-border);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    color:var(--glass-cyan);
+    font-size:20px;
+    line-height:1;
+    padding:0;
+    box-shadow:0 4px 16px rgba(0,0,0,0.3);
+    opacity:0;
+    visibility:hidden;
+    transform:translateY(10px);
+    transition:opacity 0.25s ease, transform 0.25s ease, background 0.2s ease, border-color 0.2s ease;
+  }
+  .scroll-top-btn.visible{
+    opacity:1;
+    visibility:visible;
+    transform:translateY(0);
+  }
+  .scroll-top-btn:hover{
+    background:rgba(79,216,224,0.15);
+    border-color:var(--glass-cyan);
+  }
+  @media (max-width:600px){
+    .scroll-top-btn{
+      bottom:16px;
+      right:16px;
+      width:42px;
+      height:42px;
+      font-size:18px;
+    }
   }
 
   .sync-status{
@@ -409,6 +460,24 @@
     flex-wrap:wrap;
     gap:10px;
   }
+  .form-toggle-btn{
+    margin-left:auto;
+    width:30px;
+    height:30px;
+    border-radius:10px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--panel-border);
+    color:var(--text-dim);
+    font-size:18px;
+    line-height:1;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .form-toggle-btn:hover{color:var(--glass-cyan); border-color:var(--glass-cyan);}
+  .form-panel.collapsed #orderForm{display:none;}
+  .form-panel.collapsed h2{margin-bottom:0;}
   .edit-tag{
     font-family:'JetBrains Mono', monospace;
     font-size:11px;
@@ -725,9 +794,14 @@
     cursor:pointer;
   }
   tbody tr.editing-row{background:rgba(79,216,224,0.08);}
+  tbody tr.expanded{background:rgba(79,216,224,0.06);}
   tbody tr:hover{background:rgba(255,255,255,0.06);}
   tbody tr:last-child:hover td:first-child{border-bottom-left-radius:var(--radius);}
   tbody tr:last-child:hover td:last-child{border-bottom-right-radius:var(--radius);}
+
+  tbody tr.expanded td:first-child{border-top-left-radius:16px;}
+  tbody tr.expanded td:last-child{border-top-right-radius:16px;}
+  tbody tr.expanded + tr.detail-row td{border-bottom-left-radius:16px; border-bottom-right-radius:16px;}
   tbody td{
     padding:14px 18px;
     font-size:14px;
@@ -879,10 +953,12 @@
     .remove-line{align-self:flex-end;}
     thead{display:none;}
     table{min-width:0;}
-    tbody tr{display:block; padding:14px 4px; border-top:1px solid rgba(255,255,255,0.09);}
+    tbody tr{display:block; padding:14px 4px; border-top:1px solid rgba(255,255,255,0.09); border-radius:0;}
     tbody tr.detail-row{padding:0 4px 14px;}
-    tbody td{display:block; padding:4px 10px;}
+    tbody td{display:block; padding:4px 10px; border-radius:0 !important;}
     tr.detail-row td{padding:0 6px;}
+    tbody tr.expanded{border-radius:16px 16px 0 0; overflow:hidden;}
+    tbody tr.expanded + tr.detail-row{border-radius:0 0 16px 16px; overflow:hidden;}
     td.actions{display:flex; gap:8px; padding-top:10px;}
     td.total{font-size:16px;}
     .detail-box{grid-template-columns:1fr 1fr;}
@@ -911,12 +987,14 @@
   <span id="presenceCount">0</span>
 </div>
 
+<button type="button" class="scroll-top-btn" id="scrollTopBtn" aria-label="Remonter en haut" title="Remonter en haut">↑</button>
+
 <div class="wrap" id="loginView">
   <div class="auth-center">
 
     <div class="auth-brand">
       <div class="auth-mark">✦</div>
-      <div class="eyebrow">Vente de Sacs</div>
+      <div class="eyebrow">Mode Nak'Ahy</div>
       <h1>Répartition des clients</h1>
       <p>Connectez-vous pour gérer les commandes de l'équipe.</p>
     </div>
@@ -985,7 +1063,7 @@
   <div class="auth-center">
     <div class="auth-brand">
       <div class="auth-mark" id="pendingIcon">⏳</div>
-      <div class="eyebrow">Vente de Sacs</div>
+      <div class="eyebrow">Mode Nak'Ahy</div>
       <h1 id="pendingTitle">Compte en attente de validation</h1>
       <p id="pendingText">Un membre de l'équipe doit approuver votre compte livreur avant que vous puissiez accéder à l'application.</p>
     </div>
@@ -999,7 +1077,7 @@
 <div class="wrap" id="appView" style="display:none;">
 
   <header>
-    <div class="eyebrow">Vente de Sacs</div>
+    <div class="eyebrow">Mode Nak'Ahy</div>
     <h1>Répartition des clients</h1>
     <p>Suivez les commandes, la livraison et le paiement de chaque client en un coup d'œil.</p>
     <div class="sync-status" id="syncStatus">Connexion à la base…</div>
@@ -1035,7 +1113,10 @@
   </div>
 
   <div class="glass form-panel" id="formPanel">
-    <h2>Ajouter une commande <span class="edit-tag" id="editTag">Modification en cours</span></h2>
+    <h2>
+      Ajouter une commande <span class="edit-tag" id="editTag">Modification en cours</span>
+      <button type="button" class="form-toggle-btn" id="formToggleBtn" title="Masquer le formulaire" aria-label="Masquer le formulaire">−</button>
+    </h2>
     <form id="orderForm">
 
       <div class="section-label">Client</div>
@@ -1141,6 +1222,9 @@
       <option value="12">Décembre</option>
     </select>
     <select id="filterYear"></select>
+    <select id="filterWeek" style="display:none;">
+      <option value="">Tout le mois</option>
+    </select>
   </div>
 
   <div class="search-row">
@@ -1234,11 +1318,13 @@
   let editingId = null;
   let expandedId = null;
   let historyFilter = null;
+  let weekFilter = null;
   let currentUserRole = 'equipe';
   let currentUserStatus = 'approved';
 
   const form = document.getElementById('orderForm');
   const formPanel = document.getElementById('formPanel');
+  const formToggleBtn = document.getElementById('formToggleBtn');
   const tableBody = document.getElementById('tableBody');
   const emptyState = document.getElementById('emptyState');
   const searchInput = document.getElementById('search');
@@ -1247,6 +1333,7 @@
   const historyScroll = document.getElementById('historyScroll');
   const filterMonthEl = document.getElementById('filterMonth');
   const filterYearEl = document.getElementById('filterYear');
+  const filterWeekEl = document.getElementById('filterWeek');
   const productLines = document.getElementById('productLines');
   const addProductBtn = document.getElementById('addProductBtn');
   const fraisBool = document.getElementById('fraisBool');
@@ -1302,12 +1389,18 @@
 
   const moisNoms = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 
-  function filterLabel(filter){
+  function getGreeting(){
+    const hour = new Date().getHours();
+    return (hour >= 5 && hour < 18) ? 'Bonjour' : 'Bonsoir';
+  }
+
+  function filterLabel(filter, week){
     if(!filter) return 'toutes les commandes';
     if(filter.length === 4) return `l'année ${filter}`;
     const [y, m] = filter.split('-');
     const nom = moisNoms[parseInt(m, 10) - 1] || '';
-    return `${nom.charAt(0).toUpperCase()}${nom.slice(1)} ${y}`;
+    const monthLabel = `${nom.charAt(0).toUpperCase()}${nom.slice(1)} ${y}`;
+    return week ? `Semaine ${week} de ${monthLabel}` : monthLabel;
   }
 
   function renderHistory(){
@@ -1319,7 +1412,9 @@
     allPill.textContent = 'Tous';
     allPill.addEventListener('click', () => {
       historyFilter = null;
+      weekFilter = null;
       filterMonthEl.value = '';
+      populateWeekSelect();
       renderHistory();
       render();
     });
@@ -1348,16 +1443,50 @@
     filterYearEl.value = [...filterYearEl.options].some(o => o.value === prevValue) ? prevValue : String(curYear);
   }
 
+  function daysInMonth(year, month){
+    return new Date(year, month, 0).getDate();
+  }
+
+  function populateWeekSelect(){
+    const month = filterMonthEl.value;
+    const year = filterYearEl.value;
+
+    if(!month){
+      filterWeekEl.style.display = 'none';
+      filterWeekEl.innerHTML = '<option value="">Tout le mois</option>';
+      return;
+    }
+
+    filterWeekEl.style.display = 'inline-block';
+    const total = daysInMonth(parseInt(year, 10), parseInt(month, 10));
+    const weeksCount = Math.ceil(total / 7);
+    const prevValue = filterWeekEl.value;
+
+    filterWeekEl.innerHTML = '<option value="">Tout le mois</option>';
+    for(let w = 1; w <= weeksCount; w++){
+      const startDay = (w - 1) * 7 + 1;
+      const endDay = Math.min(w * 7, total);
+      const opt = document.createElement('option');
+      opt.value = String(w);
+      opt.textContent = `Semaine ${w} (${startDay}–${endDay})`;
+      filterWeekEl.appendChild(opt);
+    }
+    filterWeekEl.value = [...filterWeekEl.options].some(o => o.value === prevValue) ? prevValue : '';
+  }
+
   function applyManualFilter(){
     const month = filterMonthEl.value;
     const year = filterYearEl.value;
     historyFilter = month ? `${year}-${month}` : year;
+    weekFilter = filterWeekEl.value ? parseInt(filterWeekEl.value, 10) : null;
     renderHistory();
     render();
   }
 
-  filterMonthEl.addEventListener('change', applyManualFilter);
-  filterYearEl.addEventListener('change', applyManualFilter);
+  filterMonthEl.addEventListener('change', () => { populateWeekSelect(); applyManualFilter(); });
+  filterYearEl.addEventListener('change', () => { populateWeekSelect(); applyManualFilter(); });
+  filterWeekEl.addEventListener('change', applyManualFilter);
+
 
   function updateClientHint(){
     const val = nomInput.value.trim().toLowerCase();
@@ -1402,6 +1531,7 @@
     const isLivreur = currentUserRole === 'livreur';
     if(statTotalCard) statTotalCard.style.display = isLivreur ? 'none' : '';
     if(tableSummary) tableSummary.style.display = isLivreur ? 'none' : '';
+    document.body.classList.toggle('livreur-theme', isLivreur);
   }
 
   async function fetchUserRoleData(uid){
@@ -1501,8 +1631,8 @@
     pendingView.style.display = 'none';
     appView.style.display = 'block';
     userNameEl.textContent = role === 'livreur'
-      ? `${user.displayName || user.email} · Livreur`
-      : (user.displayName || user.email);
+      ? `${getGreeting()}, ${user.displayName || user.email} · Livreur`
+      : `${getGreeting()}, ${user.displayName || user.email}`;
     applyRoleUI();
     if(!unsubscribeSnapshot) startListening();
     startPresence();
@@ -1712,6 +1842,7 @@
         stopPendingRequestsWatch();
         currentUserRole = 'equipe';
         currentUserStatus = 'approved';
+        document.body.classList.remove('livreur-theme');
         document.querySelectorAll('.role-pill').forEach(p => p.classList.remove('active'));
         document.querySelector('.role-pill[data-role="equipe"]').classList.add('active');
         document.getElementById('signupRole').value = 'equipe';
@@ -1805,10 +1936,27 @@
 
   cancelBtn.addEventListener('click', resetForm);
 
+  function setFormCollapsed(collapsed){
+    formPanel.classList.toggle('collapsed', collapsed);
+    formToggleBtn.textContent = collapsed ? '+' : '−';
+    formToggleBtn.title = collapsed ? 'Afficher le formulaire' : 'Masquer le formulaire';
+    formToggleBtn.setAttribute('aria-label', formToggleBtn.title);
+    try { localStorage.setItem('nakahy-form-collapsed', collapsed ? '1' : '0'); } catch (err) {}
+  }
+
+  formToggleBtn.addEventListener('click', () => {
+    setFormCollapsed(!formPanel.classList.contains('collapsed'));
+  });
+
+  try {
+    if(localStorage.getItem('nakahy-form-collapsed') === '1') setFormCollapsed(true);
+  } catch (err) {}
+
   function editOrder(id){
     const o = orders.find(x => x.id === id);
     if(!o) return;
     editingId = id;
+    setFormCollapsed(false);
 
     document.getElementById('nom').value = o.nom;
     document.getElementById('tel').value = o.tel;
@@ -1932,13 +2080,25 @@
       const matchesSearch = o.nom.toLowerCase().includes(term) ||
         o.produits.some(p => p.nom.toLowerCase().includes(term));
       const matchesHistory = !historyFilter || (o.dateCommande && o.dateCommande.startsWith(historyFilter));
-      return matchesSearch && matchesHistory;
+      let matchesWeek = true;
+      if(weekFilter && historyFilter && historyFilter.length === 7){
+        if(!o.dateCommande || !o.dateCommande.startsWith(historyFilter)){
+          matchesWeek = false;
+        } else {
+          const day = parseInt(o.dateCommande.slice(8, 10), 10);
+          const startDay = (weekFilter - 1) * 7 + 1;
+          const endDay = weekFilter * 7;
+          matchesWeek = day >= startDay && day <= endDay;
+        }
+      }
+      return matchesSearch && matchesHistory && matchesWeek;
     });
   }
 
   function exportFileName(ext){
     const period = historyFilter || 'toutes-periodes';
-    return `ventes-mode-nakahy-${period}.${ext}`;
+    const weekPart = weekFilter ? `-semaine${weekFilter}` : '';
+    return `ventes-mode-nakahy-${period}${weekPart}.${ext}`;
   }
 
   function exportPDF(){
@@ -1951,7 +2111,7 @@
     docPdf.text('Mode Nak\'Ahy — Répartition des clients', 14, 18);
     docPdf.setFontSize(11);
     docPdf.setTextColor(100);
-    docPdf.text(`Période : ${filterLabel(historyFilter)}`, 14, 26);
+    docPdf.text(`Période : ${filterLabel(historyFilter, weekFilter)}`, 14, 26);
 
     const rows = list.map(o => [
       o.nom,
@@ -2113,14 +2273,23 @@
 
     const sumNoFrais = filtered.reduce((s,o) => s + produitsTotal(o), 0);
     const sumWithFrais = filtered.reduce((s,o) => s + orderGrandTotal(o), 0);
-    document.getElementById('summaryLabel').textContent = `Total — ${filterLabel(historyFilter)}`;
+    document.getElementById('summaryLabel').textContent = `Total — ${filterLabel(historyFilter, weekFilter)}`;
     document.getElementById('sumNoFrais').textContent = formatAr(sumNoFrais);
     document.getElementById('sumWithFrais').textContent = formatAr(sumWithFrais);
   }
 
   document.getElementById('dateCommande').value = todayStr();
   populateYearSelect();
+  populateWeekSelect();
   render();
+
+  const scrollTopBtn = document.getElementById('scrollTopBtn');
+  window.addEventListener('scroll', () => {
+    scrollTopBtn.classList.toggle('visible', window.scrollY > 400);
+  });
+  scrollTopBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 </script>
 
 </body>
