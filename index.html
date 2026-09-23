@@ -2355,6 +2355,10 @@
     return o.statut !== 'ne_repond_pas' && o.statut !== 'annule';
   }
 
+  function countsTowardDeliveryTotal(o){
+    return o.statut !== 'ne_repond_pas';
+  }
+
   function formatDate(d){
     if(!d) return '—';
     const [y,m,day] = d.split('-');
@@ -2471,7 +2475,7 @@
 
     const sumNoFrais = list.filter(countsTowardTotal).reduce((s, o) => s + produitsTotal(o), 0);
     const sumWithFrais = list.filter(countsTowardTotal).reduce((s, o) => s + orderGrandTotal(o), 0);
-    const sumFrais = list.filter(countsTowardTotal).reduce((s, o) => s + (o.fraisLivraison ? o.fraisMontant : 0), 0);
+    const sumFrais = list.filter(countsTowardDeliveryTotal).reduce((s, o) => s + (o.fraisLivraison ? o.fraisMontant : 0), 0);
 
     let finalY = docPdf.lastAutoTable ? docPdf.lastAutoTable.finalY : 40;
     const boxHeight = 32;
@@ -2528,7 +2532,7 @@
 
     const sumNoFrais = list.filter(countsTowardTotal).reduce((s, o) => s + produitsTotal(o), 0);
     const sumWithFrais = list.filter(countsTowardTotal).reduce((s, o) => s + orderGrandTotal(o), 0);
-    const sumFrais = list.filter(countsTowardTotal).reduce((s, o) => s + (o.fraisLivraison ? o.fraisMontant : 0), 0);
+    const sumFrais = list.filter(countsTowardDeliveryTotal).reduce((s, o) => s + (o.fraisLivraison ? o.fraisMontant : 0), 0);
     data.push({});
     data.push({ 'Client': 'TOTAL SANS FRAIS', 'Total (Ar)': sumNoFrais });
     data.push({ 'Client': 'TOTAL AVEC FRAIS', 'Total (Ar)': sumWithFrais });
@@ -2643,7 +2647,7 @@
     document.getElementById('sumWithFrais').textContent = formatAr(sumWithFrais);
 
     const sumFraisLivraison = filtered
-      .filter(countsTowardTotal)
+      .filter(countsTowardDeliveryTotal)
       .reduce((s,o) => s + (o.fraisLivraison ? o.fraisMontant : 0), 0);
     document.getElementById('deliverySummaryVal').textContent = formatAr(sumFraisLivraison);
   }
