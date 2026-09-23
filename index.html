@@ -972,6 +972,7 @@
   }
   tbody tr.editing-row{background:rgba(79,216,224,0.09);}
   tbody tr.expanded{background:rgba(79,216,224,0.07);}
+  tbody tr.expanded + tr.detail-row{background:rgba(79,216,224,0.07);}
   tbody tr:hover{background:rgba(255,255,255,0.055);}
   tbody tr:hover td:first-child{border-top-left-radius:14px; border-bottom-left-radius:14px;}
   tbody tr:hover td:last-child{border-top-right-radius:14px; border-bottom-right-radius:14px;}
@@ -1067,7 +1068,7 @@
     border-top:none;
   }
   tr.detail-row{cursor:default;}
-  tr.detail-row:hover{background:transparent;}
+  tr.detail-row:hover{background:rgba(79,216,224,0.07);}
   .detail-box{
     background:linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
     backdrop-filter:blur(12px) saturate(150%);
