@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0B1D3A" id="themeColorMeta">
+
+<!-- Installation en app (PWA) -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mode Nak'Ahy">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Répartition des clients — Mode Nak'Ahy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -855,6 +864,42 @@
     pointer-events:none;
   }
 
+  /* Filtre par statut */
+  .status-filter-scroll{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:6px;
+    margin-bottom:16px;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+    scrollbar-color:var(--glass-cyan) rgba(255,255,255,0.06);
+  }
+  .status-filter-scroll::-webkit-scrollbar{height:6px;}
+  .status-filter-scroll::-webkit-scrollbar-track{background:rgba(255,255,255,0.06); border-radius:999px;}
+  .status-filter-scroll::-webkit-scrollbar-thumb{
+    background:linear-gradient(90deg, var(--glass-cyan), #2FA9B0);
+    border-radius:999px;
+  }
+  .status-pill{
+    flex:0 0 auto;
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--panel-border);
+    color:var(--text-dim);
+    padding:7px 15px;
+    border-radius:999px;
+    font-size:12.5px;
+    font-weight:600;
+    white-space:nowrap;
+    transition:transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+  .status-pill:hover{transform:translateY(-1px);}
+  .status-pill.active{
+    background:linear-gradient(135deg, var(--glass-cyan), #2FA9B0);
+    color:#062223;
+    border-color:transparent;
+  }
+
   /* Table */
   .table-panel{padding:8px;}
 
@@ -1084,10 +1129,10 @@
     -webkit-backdrop-filter:blur(12px) saturate(150%);
     border:1px solid rgba(255,255,255,0.1);
     border-radius:16px;
-    padding:16px 18px;
+    padding:18px 20px;
     display:grid;
     grid-template-columns:repeat(auto-fit, minmax(140px,1fr));
-    gap:14px 20px;
+    gap:18px 22px;
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.1);
     animation:detailIn 0.2s ease;
   }
@@ -1096,14 +1141,14 @@
     to{opacity:1; transform:translateY(0);}
   }
   .detail-item .d-key{
-    font-size:10px;
-    font-weight:600;
+    font-size:10.5px;
+    font-weight:700;
     text-transform:uppercase;
-    letter-spacing:0.6px;
-    color:var(--text-dim);
-    margin-bottom:4px;
+    letter-spacing:0.8px;
+    color:rgba(234,246,246,0.5);
+    margin-bottom:6px;
   }
-  .detail-item .d-val{font-size:13px; color:var(--text); font-weight:600;}
+  .detail-item .d-val{font-size:14.5px; color:#FFFFFF; font-weight:600; letter-spacing:-0.1px;}
 
   .row-toggle{
     display:inline-flex;
@@ -1195,7 +1240,7 @@
     .history-manual span{width:auto; font-size:11px;}
     .history-manual select{width:100%; height:44px; font-size:16px; padding:6px 10px;}
     .search-row{flex-basis:auto; min-width:0;}
-    .history-pill{padding:7px 13px; font-size:12px;}
+    .status-pill{padding:6px 12px; font-size:12px;}
   }
 </style>
 </head>
@@ -1473,6 +1518,8 @@
     </div>
   </div>
 
+  <div class="history-scroll status-filter-scroll" id="statusFilterScroll"></div>
+
   <div class="glass table-panel">
     <div class="table-scroll">
       <table>
@@ -1576,6 +1623,7 @@
   let expandedId = null;
   let historyFilter = null;
   let weekFilter = null;
+  let statusFilter = null;
   let currentUserRole = 'equipe';
   let currentUserStatus = 'approved';
 
@@ -1640,6 +1688,29 @@
     ne_repond_pas: {label:'Ne répond pas', cls:'ne_repond_pas'},
     annule: {label:'Annulé', cls:'annule'}
   };
+
+  const statusFilterOrder = ['attente', 'paye', 'paye_livre', 'ne_repond_pas', 'annule'];
+  const statusFilterScroll = document.getElementById('statusFilterScroll');
+
+  function renderStatusFilter(){
+    statusFilterScroll.innerHTML = '';
+
+    const allPill = document.createElement('button');
+    allPill.type = 'button';
+    allPill.className = 'status-pill' + (statusFilter === null ? ' active' : '');
+    allPill.textContent = 'Tout';
+    allPill.addEventListener('click', () => { statusFilter = null; renderStatusFilter(); render(); });
+    statusFilterScroll.appendChild(allPill);
+
+    statusFilterOrder.forEach(key => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'status-pill' + (statusFilter === key ? ' active' : '');
+      btn.textContent = badgeMeta[key].label;
+      btn.addEventListener('click', () => { statusFilter = key; renderStatusFilter(); render(); });
+      statusFilterScroll.appendChild(btn);
+    });
+  }
 
   const paiementLabels = {
     especes: 'Espèces',
@@ -2403,7 +2474,8 @@
           matchesWeek = day >= startDay && day <= endDay;
         }
       }
-      return matchesSearch && matchesHistory && matchesWeek;
+      const matchesStatus = !statusFilter || o.statut === statusFilter;
+      return matchesSearch && matchesHistory && matchesWeek && matchesStatus;
     });
   }
 
@@ -2654,6 +2726,7 @@
 
   document.getElementById('dateCommande').value = todayStr();
   populateYearSelect();
+  renderStatusFilter();
 
   (function restoreFilterState(){
     try {
@@ -2685,6 +2758,12 @@
   scrollTopBtn.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch((err) => console.error('SW:', err));
+    });
+  }
 </script>
 
 </body>
