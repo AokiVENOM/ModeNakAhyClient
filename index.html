@@ -115,7 +115,11 @@
     font-weight:600;
     color:var(--text);
     box-shadow:0 4px 16px rgba(0,0,0,0.25);
+    cursor:pointer;
+    transition:background 0.2s ease, border-color 0.2s ease;
   }
+  .presence-badge:hover{background:rgba(79,216,224,0.15); border-color:var(--glass-cyan);}
+  .presence-badge.open{background:rgba(79,216,224,0.18); border-color:var(--glass-cyan);}
   .presence-dot{
     width:8px;
     height:8px;
@@ -127,6 +131,53 @@
   @keyframes presencePulse{
     0%,100%{opacity:1;}
     50%{opacity:0.35;}
+  }
+
+  .presence-list{
+    position:fixed;
+    top:62px;
+    right:18px;
+    z-index:40;
+    min-width:190px;
+    max-width:250px;
+    max-height:260px;
+    overflow-y:auto;
+    padding:14px 16px;
+    border-radius:16px;
+    background:rgba(20,40,50,0.85);
+    border:1px solid var(--panel-border);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    box-shadow:0 8px 24px rgba(0,0,0,0.35);
+    animation:detailIn 0.2s ease;
+  }
+  .presence-list .p-title{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--text-dim);
+    margin-bottom:10px;
+  }
+  .presence-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    color:var(--text);
+    padding:6px 0;
+    border-top:1px solid rgba(255,255,255,0.08);
+  }
+  .presence-row:first-of-type{border-top:none;}
+  .presence-row .dot{
+    width:6px;height:6px;
+    border-radius:50%;
+    background:#3DFF8A;
+    box-shadow:0 0 6px #3DFF8A;
+    flex:0 0 auto;
+  }
+
+  @media (max-width:600px){
+    .presence-list{top:54px; right:10px; min-width:160px;}
   }
 
   .scroll-top-btn{
@@ -846,6 +897,7 @@
   .badge.paye{background:rgba(79,216,224,0.18); color:var(--glass-cyan); border:1px solid rgba(79,216,224,0.4);}
   .badge.livre{background:rgba(120,255,160,0.15); color:#78FFA0; border:1px solid rgba(120,255,160,0.4);}
   .badge.paye_livre{background:rgba(179,157,255,0.18); color:#C9B8FF; border:1px solid rgba(179,157,255,0.45);}
+  .badge.ne_repond_pas{background:rgba(160,160,170,0.18); color:#B8B8C4; border:1px solid rgba(160,160,170,0.4);}
 
   .icon-btn{
     background:rgba(255,255,255,0.06);
@@ -986,6 +1038,7 @@
   <span class="presence-dot"></span>
   <span id="presenceCount">0</span>
 </div>
+<div class="presence-list" id="presenceList" style="display:none;"></div>
 
 <button type="button" class="scroll-top-btn" id="scrollTopBtn" aria-label="Remonter en haut" title="Remonter en haut">↑</button>
 
@@ -1135,7 +1188,7 @@
           <select id="statut">
             <option value="attente">En attente</option>
             <option value="paye">Payé</option>
-            <option value="livre">Livré</option>
+            <option value="ne_repond_pas">Ne répond pas</option>
             <option value="paye_livre">Payé et livré</option>
           </select>
         </div>
@@ -1175,6 +1228,7 @@
           <select id="fraisMontant">
             <option value="4000">4 000 Ar</option>
             <option value="5000">5 000 Ar</option>
+            <option value="6000">6 000 Ar</option>
             <option value="8000">8 000 Ar</option>
             <option value="10000">10 000 Ar</option>
           </select>
@@ -1353,6 +1407,7 @@
   const userNameEl = document.getElementById('userName');
   const logoutBtn = document.getElementById('logoutBtn');
   const presenceBadge = document.getElementById('presenceBadge');
+  const presenceList = document.getElementById('presenceList');
   const exportPdfBtn = document.getElementById('exportPdfBtn');
   const exportExcelBtn = document.getElementById('exportExcelBtn');
   const presenceCountEl = document.getElementById('presenceCount');
@@ -1376,7 +1431,8 @@
     attente: {label:'En attente', cls:'attente'},
     paye:    {label:'Payé', cls:'paye'},
     livre:   {label:'Livré', cls:'livre'},
-    paye_livre: {label:'Payé et livré', cls:'paye_livre'}
+    paye_livre: {label:'Payé et livré', cls:'paye_livre'},
+    ne_repond_pas: {label:'Ne répond pas', cls:'ne_repond_pas'}
   };
 
   const paiementLabels = {
@@ -1517,15 +1573,49 @@
     }
   }
 
-  function updatePresenceCount(){
+  let presenceListOpen = false;
+
+  function activePresenceDocs(){
     const now = Date.now();
-    const activeCount = presenceDocs.filter(p => {
+    return presenceDocs.filter(p => {
       const ms = p.lastSeen?.toMillis ? p.lastSeen.toMillis() : 0;
       return (now - ms) < PRESENCE_TIMEOUT;
-    }).length;
+    });
+  }
+
+  function renderPresenceList(){
+    if(!presenceListOpen){
+      presenceList.style.display = 'none';
+      return;
+    }
+    const active = activePresenceDocs();
+    presenceList.innerHTML = `<div class="p-title">En ligne (${active.length})</div>` +
+      (active.length > 0
+        ? active.map(p => `<div class="presence-row"><span class="dot"></span>${escapeHtml(p.name || 'Sans nom')}</div>`).join('')
+        : `<div class="presence-row" style="border-top:none; color:var(--text-dim);">Personne d'autre pour l'instant</div>`);
+    presenceList.style.display = 'block';
+  }
+
+  function updatePresenceCount(){
+    const activeCount = activePresenceDocs().length;
     presenceCountEl.textContent = Math.max(activeCount, 1);
     presenceBadge.style.display = 'flex';
+    renderPresenceList();
   }
+
+  presenceBadge.addEventListener('click', () => {
+    presenceListOpen = !presenceListOpen;
+    presenceBadge.classList.toggle('open', presenceListOpen);
+    renderPresenceList();
+  });
+
+  document.addEventListener('click', (e) => {
+    if(presenceListOpen && !presenceBadge.contains(e.target) && !presenceList.contains(e.target)){
+      presenceListOpen = false;
+      presenceBadge.classList.remove('open');
+      renderPresenceList();
+    }
+  });
 
   function applyRoleUI(){
     const isLivreur = currentUserRole === 'livreur';
@@ -1654,6 +1744,9 @@
     if(presenceTickInterval){ clearInterval(presenceTickInterval); presenceTickInterval = null; }
     if(presenceUnsub){ presenceUnsub(); presenceUnsub = null; }
     presenceBadge.style.display = 'none';
+    presenceBadge.classList.remove('open');
+    presenceListOpen = false;
+    presenceList.style.display = 'none';
     presenceDocs = [];
   }
 
@@ -1912,7 +2005,7 @@
 
   document.getElementById('statut').addEventListener('change', (e) => {
     const dateLivraisonInput = document.getElementById('dateLivraison');
-    if((e.target.value === 'livre' || e.target.value === 'paye_livre') && !dateLivraisonInput.value){
+    if(e.target.value === 'paye_livre' && !dateLivraisonInput.value){
       dateLivraisonInput.value = todayStr();
     }
   });
