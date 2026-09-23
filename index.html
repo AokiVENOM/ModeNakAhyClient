@@ -1048,6 +1048,7 @@
   .badge.livre{background:rgba(120,255,160,0.15); color:#78FFA0; border:1px solid rgba(120,255,160,0.4);}
   .badge.paye_livre{background:rgba(179,157,255,0.18); color:#C9B8FF; border:1px solid rgba(179,157,255,0.45);}
   .badge.ne_repond_pas{background:rgba(160,160,170,0.18); color:#B8B8C4; border:1px solid rgba(160,160,170,0.4);}
+  .badge.annule{background:rgba(220,60,60,0.16); color:#FF8080; border:1px solid rgba(220,60,60,0.4); text-decoration:line-through;}
 
   .icon-btn{
     background:linear-gradient(160deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
@@ -1370,6 +1371,7 @@
             <option value="paye">Payé</option>
             <option value="ne_repond_pas">Ne répond pas</option>
             <option value="paye_livre">Payé et livré</option>
+            <option value="annule">Annulé</option>
           </select>
         </div>
       </div>
@@ -1635,7 +1637,8 @@
     paye:    {label:'Payé', cls:'paye'},
     livre:   {label:'Livré', cls:'livre'},
     paye_livre: {label:'Payé et livré', cls:'paye_livre'},
-    ne_repond_pas: {label:'Ne répond pas', cls:'ne_repond_pas'}
+    ne_repond_pas: {label:'Ne répond pas', cls:'ne_repond_pas'},
+    annule: {label:'Annulé', cls:'annule'}
   };
 
   const paiementLabels = {
@@ -2349,7 +2352,7 @@
   }
 
   function countsTowardTotal(o){
-    return o.statut !== 'ne_repond_pas';
+    return o.statut !== 'ne_repond_pas' && o.statut !== 'annule';
   }
 
   function formatDate(d){
