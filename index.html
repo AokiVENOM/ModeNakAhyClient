@@ -27,12 +27,14 @@
 
   html{-webkit-text-size-adjust:100%;}
 
+  html{background-color:#0B1D3A;}
   body{
     margin:0;
     min-height:100vh;
     font-family:'Inter', sans-serif;
     color:var(--text);
-    background:
+    background-color:#0B1D3A;
+    background-image:
       radial-gradient(circle at 15% 20%, rgba(79,216,224,0.25), transparent 40%),
       radial-gradient(circle at 85% 10%, rgba(255,140,107,0.18), transparent 45%),
       radial-gradient(circle at 70% 80%, rgba(79,216,224,0.15), transparent 40%),
@@ -40,11 +42,12 @@
     background-attachment:fixed;
     overflow-x:hidden;
     padding:40px 20px 80px;
-    transition:background 0.6s ease;
+    transition:background-color 0.6s ease;
   }
 
   body.livreur-theme{
-    background:
+    background-color:#4A2F1F;
+    background-image:
       radial-gradient(circle at 15% 20%, rgba(214,164,90,0.28), transparent 40%),
       radial-gradient(circle at 85% 10%, rgba(230,126,34,0.2), transparent 45%),
       radial-gradient(circle at 70% 80%, rgba(214,164,90,0.18), transparent 40%),
@@ -1808,6 +1811,7 @@
     document.body.classList.toggle('livreur-theme', isLivreur);
     const themeColorMeta = document.getElementById('themeColorMeta');
     if(themeColorMeta) themeColorMeta.setAttribute('content', isLivreur ? '#4A2F1F' : '#0B1D3A');
+    document.documentElement.style.backgroundColor = isLivreur ? '#4A2F1F' : '#0B1D3A';
   }
 
   async function fetchUserRoleData(uid){
