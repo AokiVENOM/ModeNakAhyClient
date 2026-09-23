@@ -240,23 +240,52 @@
     width:7px;height:7px;
     border-radius:50%;
     background:var(--text-dim);
+    flex:0 0 auto;
+  }
+  .sync-status.loading::before{
+    background:transparent;
+    border:2px solid rgba(255,255,255,0.2);
+    border-top-color:var(--text-dim);
+    animation:spin 0.7s linear infinite;
   }
   .sync-status.ok{color:#78FFA0;}
-  .sync-status.ok::before{background:#78FFA0; box-shadow:0 0 6px #78FFA0;}
+  .sync-status.ok::before{background:#78FFA0; box-shadow:0 0 6px #78FFA0; border:none; animation:none;}
   .sync-status.err{color:var(--glass-coral);}
-  .sync-status.err::before{background:var(--glass-coral);}
+  .sync-status.err::before{background:var(--glass-coral); border:none; animation:none;}
 
-  .user-bar{
-    display:flex;
+  .welcome-badge{
+    display:inline-flex;
     align-items:center;
-    justify-content:center;
-    gap:14px;
+    gap:9px;
     margin-top:12px;
-    font-size:13px;
-    color:var(--text-dim);
+    padding:8px 18px 8px 14px;
+    background:linear-gradient(135deg, rgba(79,216,224,0.15), rgba(255,140,107,0.1));
+    border:1px solid rgba(79,216,224,0.3);
+    border-radius:999px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--text);
+    box-shadow:0 4px 14px rgba(0,0,0,0.2);
   }
-  .user-bar #userName{color:var(--text); font-weight:500;}
-  .user-bar .btn-cancel{padding:6px 14px; font-size:12px;}
+  .welcome-dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--glass-cyan);
+    box-shadow:0 0 8px var(--glass-cyan);
+    flex:0 0 auto;
+  }
+
+  .account-actions{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-top:28px;
+    padding-top:20px;
+    border-top:1px solid rgba(255,255,255,0.08);
+  }
+  .account-actions .btn-cancel{padding:8px 18px; font-size:13px;}
 
   .delete-account-btn{
     color:var(--glass-coral);
@@ -302,6 +331,21 @@
     border:1px solid rgba(79,216,224,0.35);
     box-shadow:0 0 24px rgba(79,216,224,0.25);
   }
+
+  .loading-spinner{
+    width:40px;
+    height:40px;
+    margin:0 auto 22px;
+    border-radius:50%;
+    border:3px solid rgba(79,216,224,0.2);
+    border-top-color:var(--glass-cyan);
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{
+    to{transform:rotate(360deg);}
+  }
+  #loadingView .eyebrow{margin-bottom:10px;}
+  #loadingView p{color:var(--text-dim); font-size:14px; margin:0;}
 
   .auth-panel{
     width:100%;
@@ -688,38 +732,29 @@
     border-radius:999px;
   }
 
-  /* Historique par mois */
-  .history-scroll{
+  /* Rappel de filtre */
+  .filter-hint{
     display:flex;
-    gap:8px;
-    overflow-x:auto;
-    padding-bottom:10px;
-    margin-bottom:6px;
-    -webkit-overflow-scrolling:touch;
-    scrollbar-width:thin;
-    scrollbar-color:var(--glass-cyan) rgba(255,255,255,0.06);
-  }
-  .history-scroll::-webkit-scrollbar{height:8px;}
-  .history-scroll::-webkit-scrollbar-track{background:rgba(255,255,255,0.06); border-radius:999px;}
-  .history-scroll::-webkit-scrollbar-thumb{
-    background:linear-gradient(90deg, var(--glass-cyan), #2FA9B0);
-    border-radius:999px;
-  }
-  .history-pill{
-    flex:0 0 auto;
-    background:rgba(255,255,255,0.06);
-    border:1px solid var(--panel-border);
-    color:var(--text-dim);
-    padding:8px 16px;
-    border-radius:999px;
+    align-items:flex-start;
+    gap:10px;
+    background:rgba(255,140,107,0.1);
+    border:1px solid rgba(255,140,107,0.3);
+    border-radius:14px;
+    padding:12px 16px;
+    margin-bottom:16px;
     font-size:13px;
-    white-space:nowrap;
+    color:var(--text);
+    line-height:1.4;
   }
-  .history-pill.active{
-    background:linear-gradient(135deg, var(--glass-cyan), #2FA9B0);
-    color:#062223;
-    border-color:transparent;
-    font-weight:600;
+  .filter-hint-icon{flex:0 0 auto; font-size:15px; line-height:1.3;}
+
+  .filter-search-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:16px;
   }
 
   .history-manual{
@@ -727,9 +762,10 @@
     flex-wrap:wrap;
     align-items:center;
     gap:10px;
-    margin-bottom:16px;
+    margin-bottom:0;
     font-size:12px;
     color:var(--text-dim);
+    flex:0 1 auto;
   }
   .history-manual select{
     width:auto;
@@ -740,12 +776,26 @@
 
   /* Recherche */
   .search-row{
+    position:relative;
     display:flex;
-    gap:12px;
-    margin-bottom:16px;
     align-items:center;
+    margin-bottom:0;
+    flex:1 1 260px;
+    min-width:200px;
   }
-  .search-row input{flex:1;}
+  .search-row input{
+    flex:1;
+    border-radius:12px;
+    padding-left:40px;
+  }
+  .search-icon{
+    position:absolute;
+    left:14px;
+    width:16px;
+    height:16px;
+    color:var(--text-dim);
+    pointer-events:none;
+  }
 
   /* Table */
   .table-panel{padding:8px;}
@@ -785,6 +835,15 @@
   }
   .summary-item.no-frais .s-val{color:var(--glass-cyan);}
   .summary-item.with-frais .s-val{color:var(--glass-coral);}
+  .summary-item.delivery-item .s-val{color:#78FFA0;}
+  .sales-items{display:contents;}
+
+  .copyright{
+    margin-top:6px;
+    font-size:11px;
+    color:var(--text-dim);
+    opacity:0.75;
+  }
 
   .export-row{
     display:flex;
@@ -982,6 +1041,7 @@
     .blob{animation:none;}
     .glass::before{transition:none;}
     .detail-box{animation:none;}
+    .loading-spinner{animation:none;}
   }
 
   /* Responsive: tablette */
@@ -1018,12 +1078,19 @@
     .table-summary{padding:18px 18px; gap:12px 20px;}
     .summary-row{gap:22px; width:100%; justify-content:space-between;}
     .summary-item .s-val{font-size:18px;}
+    .filter-search-row{
+      flex-direction:column;
+      align-items:stretch;
+      gap:12px;
+    }
     .history-manual{
       gap:8px 10px;
-      margin-bottom:14px;
+      margin-bottom:0;
+      width:100%;
     }
     .history-manual span{width:100%; font-size:11px;}
     .history-manual select{flex:1; min-width:0; height:44px; font-size:16px; padding:6px 8px;}
+    .search-row{flex-basis:auto; min-width:0;}
     .history-pill{padding:7px 13px; font-size:12px;}
   }
 </style>
@@ -1042,7 +1109,17 @@
 
 <button type="button" class="scroll-top-btn" id="scrollTopBtn" aria-label="Remonter en haut" title="Remonter en haut">↑</button>
 
-<div class="wrap" id="loginView">
+<div class="wrap" id="loadingView">
+  <div class="auth-center">
+    <div class="auth-brand">
+      <div class="loading-spinner"></div>
+      <div class="eyebrow">Mode Nak'Ahy</div>
+      <p>Connexion en cours…</p>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="loginView" style="display:none;">
   <div class="auth-center">
 
     <div class="auth-brand">
@@ -1133,11 +1210,10 @@
     <div class="eyebrow">Mode Nak'Ahy</div>
     <h1>Répartition des clients</h1>
     <p>Suivez les commandes, la livraison et le paiement de chaque client en un coup d'œil.</p>
-    <div class="sync-status" id="syncStatus">Connexion à la base…</div>
-    <div class="user-bar">
+    <div class="sync-status loading" id="syncStatus">Connexion à la base…</div>
+    <div class="welcome-badge">
+      <span class="welcome-dot"></span>
       <span id="userName"></span>
-      <button type="button" id="logoutBtn" class="btn-cancel" style="display:inline-block;">Déconnexion</button>
-      <button type="button" id="deleteAccountBtn" class="btn-cancel delete-account-btn" style="display:inline-block;">Supprimer mon compte</button>
     </div>
   </header>
 
@@ -1256,33 +1332,39 @@
     </form>
   </div>
 
-  <div class="history-scroll" id="historyScroll"></div>
-
-  <div class="history-manual">
-    <span>Aller à :</span>
-    <select id="filterMonth">
-      <option value="">Tous les mois</option>
-      <option value="01">Janvier</option>
-      <option value="02">Février</option>
-      <option value="03">Mars</option>
-      <option value="04">Avril</option>
-      <option value="05">Mai</option>
-      <option value="06">Juin</option>
-      <option value="07">Juillet</option>
-      <option value="08">Août</option>
-      <option value="09">Septembre</option>
-      <option value="10">Octobre</option>
-      <option value="11">Novembre</option>
-      <option value="12">Décembre</option>
-    </select>
-    <select id="filterYear"></select>
-    <select id="filterWeek" style="display:none;">
-      <option value="">Tout le mois</option>
-    </select>
+  <div class="filter-hint">
+    <span class="filter-hint-icon">⚠️</span>
+    N'oublie pas de changer la date ci-dessous pour voir les commandes récentes des clients.
   </div>
 
-  <div class="search-row">
-    <input type="text" id="search" class="glass" style="border-radius:12px;" placeholder="Rechercher un client ou un modèle...">
+  <div class="filter-search-row">
+    <div class="history-manual">
+      <span>Aller à :</span>
+      <select id="filterMonth">
+        <option value="">Tous les mois</option>
+        <option value="01">Janvier</option>
+        <option value="02">Février</option>
+        <option value="03">Mars</option>
+        <option value="04">Avril</option>
+        <option value="05">Mai</option>
+        <option value="06">Juin</option>
+        <option value="07">Juillet</option>
+        <option value="08">Août</option>
+        <option value="09">Septembre</option>
+        <option value="10">Octobre</option>
+        <option value="11">Novembre</option>
+        <option value="12">Décembre</option>
+      </select>
+      <select id="filterYear"></select>
+      <select id="filterWeek" style="display:none;">
+        <option value="">Toutes les semaines</option>
+      </select>
+    </div>
+
+    <div class="search-row">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="search" class="glass" placeholder="Rechercher un client ou un modèle...">
+    </div>
   </div>
 
   <div class="glass table-panel">
@@ -1306,24 +1388,35 @@
   <div class="glass table-summary" id="tableSummary">
     <div class="summary-label" id="summaryLabel">Total — toutes les commandes</div>
     <div class="summary-row">
-      <div class="summary-item no-frais">
-        <span class="s-key">Sans frais de livraison</span>
-        <span class="s-val" id="sumNoFrais">0 Ar</span>
+      <div class="sales-items" id="salesItems">
+        <div class="summary-item no-frais">
+          <span class="s-key">Sans frais de livraison</span>
+          <span class="s-val" id="sumNoFrais">0 Ar</span>
+        </div>
+        <div class="summary-item with-frais">
+          <span class="s-key">Avec frais de livraison</span>
+          <span class="s-val" id="sumWithFrais">0 Ar</span>
+        </div>
       </div>
-      <div class="summary-item with-frais">
-        <span class="s-key">Avec frais de livraison</span>
-        <span class="s-val" id="sumWithFrais">0 Ar</span>
+      <div class="summary-item delivery-item">
+        <span class="s-key">Frais de livraison</span>
+        <span class="s-val" id="deliverySummaryVal">0 Ar</span>
       </div>
     </div>
-    <div class="export-row">
+    <div class="export-row" id="exportRow">
       <button type="button" class="btn-cancel export-btn" id="exportPdfBtn" style="display:inline-flex;">📄 Télécharger PDF</button>
       <button type="button" class="btn-cancel export-btn" id="exportExcelBtn" style="display:inline-flex;">📊 Télécharger Excel</button>
     </div>
   </div>
 
-  <p style="text-align:center; font-size:12px; color:var(--text-dim); margin-top:10px;">Cliquez sur un client pour voir tous les détails.</p>
+  <div class="account-actions">
+    <button type="button" id="logoutBtn" class="btn-cancel" style="display:inline-block;">Déconnexion</button>
+    <button type="button" id="deleteAccountBtn" class="btn-cancel delete-account-btn" style="display:inline-block;">Supprimer mon compte</button>
+  </div>
 
-  <footer>Les données restent dans cette page tant qu'elle est ouverte — actualiser la page les réinitialise.</footer>
+  <footer>
+    <div class="copyright">© 2026 Toky RAMANITRA — Mode Nak'Ahy. Tous droits réservés.</div>
+  </footer>
 
 </div>
 
@@ -1363,8 +1456,12 @@
     auth = getAuth(app);
   } catch (err) {
     syncStatus.textContent = 'Configuration Firebase manquante ou invalide';
+    syncStatus.classList.remove('loading');
     syncStatus.classList.add('err');
     console.error(err);
+    document.getElementById('loadingView').style.display = 'none';
+    document.getElementById('loginView').style.display = 'block';
+    document.getElementById('authError').textContent = 'Configuration Firebase manquante ou invalide.';
   }
 
   let orders = [];
@@ -1384,7 +1481,6 @@
   const searchInput = document.getElementById('search');
   const nomInput = document.getElementById('nom');
   const clientHint = document.getElementById('clientHint');
-  const historyScroll = document.getElementById('historyScroll');
   const filterMonthEl = document.getElementById('filterMonth');
   const filterYearEl = document.getElementById('filterYear');
   const filterWeekEl = document.getElementById('filterWeek');
@@ -1394,6 +1490,7 @@
   const fraisMontantWrap = document.getElementById('fraisMontantWrap');
   const cancelBtn = document.getElementById('cancelBtn');
   const submitBtn = document.getElementById('submitBtn');
+  const loadingView = document.getElementById('loadingView');
   const loginView = document.getElementById('loginView');
   const appView = document.getElementById('appView');
   const loginForm = document.getElementById('loginForm');
@@ -1413,6 +1510,8 @@
   const presenceCountEl = document.getElementById('presenceCount');
   const statTotalCard = document.getElementById('statTotalCard');
   const tableSummary = document.getElementById('tableSummary');
+  const salesItems = document.getElementById('salesItems');
+  const exportRow = document.getElementById('exportRow');
   const pendingView = document.getElementById('pendingView');
   const pendingIcon = document.getElementById('pendingIcon');
   const pendingTitle = document.getElementById('pendingTitle');
@@ -1459,24 +1558,6 @@
     return week ? `Semaine ${week} de ${monthLabel}` : monthLabel;
   }
 
-  function renderHistory(){
-    historyScroll.innerHTML = '';
-
-    const allPill = document.createElement('button');
-    allPill.type = 'button';
-    allPill.className = 'history-pill' + (historyFilter === null ? ' active' : '');
-    allPill.textContent = 'Tous';
-    allPill.addEventListener('click', () => {
-      historyFilter = null;
-      weekFilter = null;
-      filterMonthEl.value = '';
-      populateWeekSelect();
-      renderHistory();
-      render();
-    });
-    historyScroll.appendChild(allPill);
-  }
-
   function populateYearSelect(){
     const now = new Date();
     const curYear = now.getFullYear();
@@ -1509,7 +1590,7 @@
 
     if(!month){
       filterWeekEl.style.display = 'none';
-      filterWeekEl.innerHTML = '<option value="">Tout le mois</option>';
+      filterWeekEl.innerHTML = '<option value="">Toutes les semaines</option>';
       return;
     }
 
@@ -1518,7 +1599,7 @@
     const weeksCount = Math.ceil(total / 7);
     const prevValue = filterWeekEl.value;
 
-    filterWeekEl.innerHTML = '<option value="">Tout le mois</option>';
+    filterWeekEl.innerHTML = '<option value="">Toutes les semaines</option>';
     for(let w = 1; w <= weeksCount; w++){
       const startDay = (w - 1) * 7 + 1;
       const endDay = Math.min(w * 7, total);
@@ -1530,12 +1611,22 @@
     filterWeekEl.value = [...filterWeekEl.options].some(o => o.value === prevValue) ? prevValue : '';
   }
 
+  function saveFilterState(){
+    try {
+      localStorage.setItem('nakahy-filter', JSON.stringify({
+        month: filterMonthEl.value,
+        year: filterYearEl.value,
+        week: filterWeekEl.value
+      }));
+    } catch (err) {}
+  }
+
   function applyManualFilter(){
     const month = filterMonthEl.value;
     const year = filterYearEl.value;
     historyFilter = month ? `${year}-${month}` : year;
     weekFilter = filterWeekEl.value ? parseInt(filterWeekEl.value, 10) : null;
-    renderHistory();
+    saveFilterState();
     render();
   }
 
@@ -1620,7 +1711,8 @@
   function applyRoleUI(){
     const isLivreur = currentUserRole === 'livreur';
     if(statTotalCard) statTotalCard.style.display = isLivreur ? 'none' : '';
-    if(tableSummary) tableSummary.style.display = isLivreur ? 'none' : '';
+    if(salesItems) salesItems.style.display = isLivreur ? 'none' : 'contents';
+    if(exportRow) exportRow.style.display = isLivreur ? 'none' : 'flex';
     document.body.classList.toggle('livreur-theme', isLivreur);
   }
 
@@ -1751,6 +1843,9 @@
   }
 
   function startListening(){
+    syncStatus.textContent = 'Connexion à la base…';
+    syncStatus.classList.add('loading');
+    syncStatus.classList.remove('ok', 'err');
     unsubscribeSnapshot = onSnapshot(commandesRef, (snapshot) => {
       orders = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       orders.sort((a, b) => {
@@ -1759,17 +1854,16 @@
         return tb - ta;
       });
       syncStatus.textContent = 'Synchronisé avec Firebase';
+      syncStatus.classList.remove('loading', 'err');
       syncStatus.classList.add('ok');
-      syncStatus.classList.remove('err');
-      renderHistory();
       populateYearSelect();
       updateClientHint();
       render();
     }, (err) => {
       console.error(err);
       syncStatus.textContent = 'Erreur de connexion à Firebase';
+      syncStatus.classList.remove('loading', 'ok');
       syncStatus.classList.add('err');
-      syncStatus.classList.remove('ok');
     });
   }
 
@@ -1923,6 +2017,7 @@
 
   if(auth){
     onAuthStateChanged(auth, async (user) => {
+      loadingView.style.display = 'none';
       if(user){
         const { role, status } = await fetchUserRoleData(user.uid);
         routeAfterAuth(user, role, status);
@@ -2146,6 +2241,10 @@
     return produitsTotal(o) + (o.fraisLivraison ? o.fraisMontant : 0);
   }
 
+  function countsTowardTotal(o){
+    return o.statut !== 'ne_repond_pas';
+  }
+
   function formatDate(d){
     if(!d) return '—';
     const [y,m,day] = d.split('-');
@@ -2226,8 +2325,8 @@
       alternateRowStyles: { fillColor: [245, 248, 248] }
     });
 
-    const sumNoFrais = list.reduce((s, o) => s + produitsTotal(o), 0);
-    const sumWithFrais = list.reduce((s, o) => s + orderGrandTotal(o), 0);
+    const sumNoFrais = list.filter(countsTowardTotal).reduce((s, o) => s + produitsTotal(o), 0);
+    const sumWithFrais = list.filter(countsTowardTotal).reduce((s, o) => s + orderGrandTotal(o), 0);
     const finalY = docPdf.lastAutoTable ? docPdf.lastAutoTable.finalY : 32;
 
     docPdf.setFontSize(11);
@@ -2256,8 +2355,8 @@
       'Ajouté par': o.ajoutePar || ''
     }));
 
-    const sumNoFrais = list.reduce((s, o) => s + produitsTotal(o), 0);
-    const sumWithFrais = list.reduce((s, o) => s + orderGrandTotal(o), 0);
+    const sumNoFrais = list.filter(countsTowardTotal).reduce((s, o) => s + produitsTotal(o), 0);
+    const sumWithFrais = list.filter(countsTowardTotal).reduce((s, o) => s + orderGrandTotal(o), 0);
     data.push({});
     data.push({ 'Client': 'TOTAL SANS FRAIS', 'Total (Ar)': sumNoFrais });
     data.push({ 'Client': 'TOTAL AVEC FRAIS', 'Total (Ar)': sumWithFrais });
@@ -2357,23 +2456,49 @@
     }
 
     const sacsCount = orders.reduce((s,o) => s + o.produits.length, 0);
-    const totalAr = orders.reduce((s,o) => s + orderGrandTotal(o), 0);
+    const totalAr = orders.filter(countsTowardTotal).reduce((s,o) => s + orderGrandTotal(o), 0);
 
     document.getElementById('statClients').textContent = orders.length;
     document.getElementById('statSacs').textContent = sacsCount;
     document.getElementById('statAttente').textContent = orders.filter(o => o.statut === 'attente').length;
     document.getElementById('statTotal').textContent = formatAr(totalAr);
 
-    const sumNoFrais = filtered.reduce((s,o) => s + produitsTotal(o), 0);
-    const sumWithFrais = filtered.reduce((s,o) => s + orderGrandTotal(o), 0);
+    const sumNoFrais = filtered.filter(countsTowardTotal).reduce((s,o) => s + produitsTotal(o), 0);
+    const sumWithFrais = filtered.filter(countsTowardTotal).reduce((s,o) => s + orderGrandTotal(o), 0);
     document.getElementById('summaryLabel').textContent = `Total — ${filterLabel(historyFilter, weekFilter)}`;
     document.getElementById('sumNoFrais').textContent = formatAr(sumNoFrais);
     document.getElementById('sumWithFrais').textContent = formatAr(sumWithFrais);
+
+    const sumFraisLivraison = filtered
+      .filter(countsTowardTotal)
+      .reduce((s,o) => s + (o.fraisLivraison ? o.fraisMontant : 0), 0);
+    document.getElementById('deliverySummaryVal').textContent = formatAr(sumFraisLivraison);
   }
 
   document.getElementById('dateCommande').value = todayStr();
   populateYearSelect();
-  populateWeekSelect();
+
+  (function restoreFilterState(){
+    try {
+      const saved = JSON.parse(localStorage.getItem('nakahy-filter') || 'null');
+      if(saved){
+        if(saved.month && [...filterMonthEl.options].some(o => o.value === saved.month)){
+          filterMonthEl.value = saved.month;
+        }
+        if(saved.year && [...filterYearEl.options].some(o => o.value === saved.year)){
+          filterYearEl.value = saved.year;
+        }
+        populateWeekSelect();
+        if(saved.week && [...filterWeekEl.options].some(o => o.value === saved.week)){
+          filterWeekEl.value = saved.week;
+        }
+        applyManualFilter();
+        return;
+      }
+    } catch (err) {}
+    populateWeekSelect();
+  })();
+
   render();
 
   const scrollTopBtn = document.getElementById('scrollTopBtn');
