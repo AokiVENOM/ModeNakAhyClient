@@ -1419,6 +1419,17 @@
             <option value="annule">Annulé</option>
           </select>
         </div>
+        <div class="field narrow">
+          <label for="liveSelect">Live (optionnel)</label>
+          <select id="liveSelect">
+            <option value="">Aucun</option>
+            <option value="__new__">+ Nouveau live…</option>
+          </select>
+        </div>
+        <div class="field narrow" id="liveNewWrap" style="display:none;">
+          <label for="liveNewInput">Nom du nouveau live</label>
+          <input type="text" id="liveNewInput" placeholder="Ex: Live 3" autocomplete="off">
+        </div>
       </div>
 
       <div class="section-label">Produits commandés</div>
@@ -1509,6 +1520,9 @@
       <select id="filterYear"></select>
       <select id="filterWeek" style="display:none;">
         <option value="">Toutes les semaines</option>
+      </select>
+      <select id="filterLive">
+        <option value="">Toutes les lives</option>
       </select>
     </div>
 
@@ -1624,6 +1638,7 @@
   let historyFilter = null;
   let weekFilter = null;
   let statusFilter = null;
+  let liveFilter = null;
   let currentUserRole = 'equipe';
   let currentUserStatus = 'approved';
 
@@ -1638,6 +1653,15 @@
   const filterMonthEl = document.getElementById('filterMonth');
   const filterYearEl = document.getElementById('filterYear');
   const filterWeekEl = document.getElementById('filterWeek');
+  const filterLiveEl = document.getElementById('filterLive');
+  const liveSelect = document.getElementById('liveSelect');
+  const liveNewWrap = document.getElementById('liveNewWrap');
+  const liveNewInput = document.getElementById('liveNewInput');
+
+  liveSelect.addEventListener('change', () => {
+    liveNewWrap.style.display = liveSelect.value === '__new__' ? 'flex' : 'none';
+    if(liveSelect.value === '__new__') liveNewInput.focus();
+  });
   const productLines = document.getElementById('productLines');
   const addProductBtn = document.getElementById('addProductBtn');
   const fraisBool = document.getElementById('fraisBool');
@@ -1789,12 +1813,43 @@
     filterWeekEl.value = [...filterWeekEl.options].some(o => o.value === prevValue) ? prevValue : '';
   }
 
+  function populateLiveOptions(){
+    const values = Array.from(new Set(
+      orders.map(o => (o.live || '').trim()).filter(Boolean)
+    )).sort((a, b) => a.localeCompare(b, 'fr'));
+
+    const prevValue = filterLiveEl.value;
+    filterLiveEl.innerHTML = '<option value="">Toutes les lives</option>';
+    values.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      filterLiveEl.appendChild(opt);
+    });
+    if(values.includes(prevValue)) filterLiveEl.value = prevValue;
+
+    const prevFormValue = liveSelect.value;
+    liveSelect.innerHTML = '<option value="">Aucun</option>';
+    values.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      liveSelect.appendChild(opt);
+    });
+    const newOpt = document.createElement('option');
+    newOpt.value = '__new__';
+    newOpt.textContent = '+ Nouveau live…';
+    liveSelect.appendChild(newOpt);
+    if(values.includes(prevFormValue) || prevFormValue === '__new__') liveSelect.value = prevFormValue;
+  }
+
   function saveFilterState(){
     try {
       localStorage.setItem('nakahy-filter', JSON.stringify({
         month: filterMonthEl.value,
         year: filterYearEl.value,
-        week: filterWeekEl.value
+        week: filterWeekEl.value,
+        live: filterLiveEl.value
       }));
     } catch (err) {}
   }
@@ -1804,6 +1859,7 @@
     const year = filterYearEl.value;
     historyFilter = month ? `${year}-${month}` : year;
     weekFilter = filterWeekEl.value ? parseInt(filterWeekEl.value, 10) : null;
+    liveFilter = filterLiveEl.value || null;
     saveFilterState();
     render();
   }
@@ -1811,6 +1867,7 @@
   filterMonthEl.addEventListener('change', () => { populateWeekSelect(); applyManualFilter(); });
   filterYearEl.addEventListener('change', () => { populateWeekSelect(); applyManualFilter(); });
   filterWeekEl.addEventListener('change', applyManualFilter);
+  filterLiveEl.addEventListener('change', applyManualFilter);
 
 
   function updateClientHint(){
@@ -2038,6 +2095,7 @@
       syncStatus.classList.remove('loading', 'err');
       syncStatus.classList.add('ok');
       populateYearSelect();
+      populateLiveOptions();
       updateClientHint();
       render();
     }, (err) => {
@@ -2297,6 +2355,9 @@
     document.getElementById('modePaiement').value = 'especes';
     fraisBool.value = 'non';
     fraisMontantWrap.style.display = 'none';
+    liveSelect.value = '';
+    liveNewWrap.style.display = 'none';
+    liveNewInput.value = '';
     formPanel.classList.remove('editing');
     submitBtn.textContent = 'Enregistrer la commande';
     clientHint.textContent = '';
@@ -2334,6 +2395,17 @@
     document.getElementById('dateLivraison').value = o.dateLivraison || '';
     document.getElementById('lieu').value = o.lieu || '';
     document.getElementById('modePaiement').value = o.modePaiement || 'especes';
+    if(o.live && [...liveSelect.options].some(opt => opt.value === o.live)){
+      liveSelect.value = o.live;
+      liveNewWrap.style.display = 'none';
+    } else if(o.live){
+      liveSelect.value = '__new__';
+      liveNewWrap.style.display = 'flex';
+      liveNewInput.value = o.live;
+    } else {
+      liveSelect.value = '';
+      liveNewWrap.style.display = 'none';
+    }
     fraisBool.value = o.fraisLivraison ? 'oui' : 'non';
     fraisMontantWrap.style.display = o.fraisLivraison ? 'flex' : 'none';
     if(o.fraisLivraison) document.getElementById('fraisMontant').value = String(o.fraisMontant);
@@ -2364,6 +2436,7 @@
     const dateLivraison = document.getElementById('dateLivraison').value;
     const lieu = document.getElementById('lieu').value.trim();
     const modePaiement = document.getElementById('modePaiement').value;
+    const live = liveSelect.value === '__new__' ? liveNewInput.value.trim() : liveSelect.value;
     const fraisLivraison = fraisBool.value === 'oui';
     const fraisMontant = fraisLivraison ? parseInt(document.getElementById('fraisMontant').value, 10) : 0;
 
@@ -2380,7 +2453,7 @@
 
     const data = {
       nom, tel, statut, dateCommande, dateLivraison,
-      lieu, fraisLivraison, fraisMontant, modePaiement, produits
+      lieu, fraisLivraison, fraisMontant, modePaiement, live, produits
     };
 
     submitBtn.disabled = true;
@@ -2475,7 +2548,8 @@
         }
       }
       const matchesStatus = !statusFilter || o.statut === statusFilter;
-      return matchesSearch && matchesHistory && matchesWeek && matchesStatus;
+      const matchesLive = !liveFilter || (o.live || '').trim() === liveFilter;
+      return matchesSearch && matchesHistory && matchesWeek && matchesStatus && matchesLive;
     });
   }
 
@@ -2511,7 +2585,7 @@
     const rows = list.map(o => [
       o.nom,
       o.tel || '—',
-      o.produits.map(p => `${p.nom} (${formatArPdf(p.prix)})`).join(', '),
+      o.produits.map(p => `${p.nom}  (${formatArPdf(p.prix)})`).join('\n'),
       formatArPdf(orderGrandTotal(o)),
       badgeMeta[o.statut]?.label || o.statut,
       paiementLabels[o.modePaiement] || '—',
@@ -2524,12 +2598,18 @@
       margin: { left: 14, right: 14, bottom: 18 },
       head: [['Client', 'Téléphone', 'Produits', 'Total', 'Statut', 'Paiement', 'Lieu', 'Frais']],
       body: rows,
-      styles: { fontSize: 8, cellPadding: 3.5, textColor: [45, 45, 50], lineColor: [228, 232, 233], lineWidth: 0.25 },
-      headStyles: { fillColor: [18, 59, 79], textColor: 255, fontStyle: 'bold', fontSize: 8.5, halign: 'left' },
+      styles: { fontSize: 7.5, cellPadding: 4, textColor: [45, 45, 50], lineColor: [228, 232, 233], lineWidth: 0.25, valign: 'top' },
+      headStyles: { fillColor: [18, 59, 79], textColor: 255, fontStyle: 'bold', fontSize: 8, halign: 'left' },
       alternateRowStyles: { fillColor: [244, 248, 249] },
       columnStyles: {
-        3: { halign: 'right', fontStyle: 'bold' },
-        7: { halign: 'right' }
+        0: { cellWidth: 24, fontStyle: 'bold' },
+        1: { cellWidth: 22 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 18, halign: 'right', fontStyle: 'bold' },
+        4: { cellWidth: 22 },
+        5: { cellWidth: 20 },
+        6: { cellWidth: 20 },
+        7: { cellWidth: 16, halign: 'right' }
       },
       didDrawPage: (data) => {
         const pageCount = docPdf.internal.getNumberOfPages();
@@ -2695,6 +2775,7 @@
                 <div class="detail-item"><div class="d-key">Date de livraison</div><div class="d-val">${formatDate(o.dateLivraison)}</div></div>
                 <div class="detail-item"><div class="d-key">Lieu de livraison</div><div class="d-val">${escapeHtml(o.lieu) || '—'}</div></div>
                 <div class="detail-item"><div class="d-key">Frais de livraison</div><div class="d-val">${o.fraisLivraison ? formatAr(o.fraisMontant) : 'Gratuite'}</div></div>
+                <div class="detail-item"><div class="d-key">Live</div><div class="d-val">${escapeHtml(o.live) || '—'}</div></div>
                 ${ajoutePar}
               </div>
             </td>
@@ -2741,6 +2822,13 @@
         populateWeekSelect();
         if(saved.week && [...filterWeekEl.options].some(o => o.value === saved.week)){
           filterWeekEl.value = saved.week;
+        }
+        if(saved.live){
+          const opt = document.createElement('option');
+          opt.value = saved.live;
+          opt.textContent = saved.live;
+          filterLiveEl.appendChild(opt);
+          filterLiveEl.value = saved.live;
         }
         applyManualFilter();
         return;
