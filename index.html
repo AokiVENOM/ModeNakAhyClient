@@ -164,7 +164,6 @@
     backdrop-filter:blur(16px);
     -webkit-backdrop-filter:blur(16px);
     box-shadow:0 8px 24px rgba(0,0,0,0.35);
-    animation:detailIn 0.2s ease;
   }
   .presence-list .p-title{
     font-size:11px;
@@ -554,6 +553,95 @@
   }
   .glass:hover::before{background-position:100% 0;}
 
+  /* ===== Liquid Glass (style iOS) ===== */
+  .glass{
+    transition:transform 0.35s cubic-bezier(.2,.8,.2,1), box-shadow 0.35s ease;
+  }
+  /* Liseré lumineux + reflet spéculaire qui suit le doigt / la souris */
+  .glass::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    pointer-events:none;
+    padding:1px;
+    background:
+      linear-gradient(160deg, rgba(255,255,255,0.55), rgba(255,255,255,0.05) 35%, rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.3));
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;
+    mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    opacity:0.9;
+    transition:opacity 0.3s ease;
+  }
+  .glass:hover{
+    box-shadow:
+      0 18px 50px rgba(0,0,0,0.32),
+      0 2px 8px rgba(0,0,0,0.18),
+      inset 0 1.5px 0 rgba(255,255,255,0.4),
+      inset 0 -1px 0 rgba(0,0,0,0.12);
+  }
+
+  /* Cartes de statistiques : légère élévation « flottante » */
+  .stat{transition:transform 0.4s cubic-bezier(.2,.8,.2,1), box-shadow 0.4s ease;}
+  .stat:hover{transform:translateY(-3px) scale(1.015);}
+  .stats .stat.reveal:nth-child(1){transition-delay:0.00s;}
+  .stats .stat.reveal:nth-child(2){transition-delay:0.08s;}
+  .stats .stat.reveal:nth-child(3){transition-delay:0.16s;}
+  .stats .stat.reveal:nth-child(4){transition-delay:0.24s;}
+
+  @keyframes glassIn{
+    from{opacity:0; transform:translateY(14px) scale(0.985);}
+    to{opacity:1; transform:translateY(0) scale(1);}
+  }
+
+  /* Apparition au défilement */
+  .reveal{
+    opacity:0;
+    transform:translateY(28px) scale(0.97);
+    transition:opacity 0.8s cubic-bezier(.16,1,.3,1), transform 0.8s cubic-bezier(.16,1,.3,1);
+  }
+  .reveal.in-view{opacity:1; transform:translateY(0) scale(1);}
+
+  /* Titre avec reflet lumineux qui glisse */
+  header h1, .auth-brand h1{
+    background:linear-gradient(100deg, var(--text) 0%, var(--text) 40%, #ffffff 50%, var(--glass-cyan) 55%, var(--text) 65%, var(--text) 100%);
+    background-size:250% 100%;
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+    animation:titleShine 7s ease-in-out infinite;
+  }
+  @keyframes titleShine{
+    0%,100%{background-position:100% 0;}
+    50%{background-position:0% 0;}
+  }
+
+  /* Compteurs : petit « pop » quand la valeur change */
+  .stat .num.bump{animation:numPop 0.5s cubic-bezier(.3,1.6,.5,1);}
+  @keyframes numPop{
+    0%{transform:scale(1);}
+    40%{transform:scale(1.12);}
+    100%{transform:scale(1);}
+  }
+
+  /* Retour tactile : effet « gel » à l'appui */
+  button{-webkit-tap-highlight-color:transparent;}
+  button:active{transform:scale(0.96) !important; transition:transform 0.08s ease !important;}
+  .btn-add, .export-btn, .status-pill, .icon-btn, .btn-cancel{
+    transition:transform 0.3s cubic-bezier(.3,1.6,.5,1), box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease, color 0.2s ease;
+  }
+
+  /* Pastilles de statut : verre + lueur sur l'actif */
+  .status-pill{
+    background:linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+    backdrop-filter:blur(14px) saturate(170%);
+    -webkit-backdrop-filter:blur(14px) saturate(170%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .status-pill.active{box-shadow:inset 0 1px 0 rgba(255,255,255,0.5), 0 4px 16px rgba(79,216,224,0.35);}
+
+
+
   .stats{
     display:grid;
     grid-template-columns:repeat(auto-fit, minmax(140px,1fr));
@@ -862,6 +950,96 @@
     height:16px;
     color:var(--text-dim);
     pointer-events:none;
+  }
+
+  /* ===== Barre de navigation (Clients / Dépenses) ===== */
+  .app-nav{
+    position:relative;
+    display:flex;
+    gap:0;
+    padding:5px;
+    border-radius:999px;
+    max-width:380px;
+    margin:0 auto 22px;
+  }
+  .app-nav::before{display:none;}
+  .app-nav-indicator{
+    position:absolute;
+    top:5px;
+    bottom:5px;
+    left:5px;
+    width:calc(50% - 5px);
+    border-radius:999px;
+    background:linear-gradient(135deg, var(--glass-cyan), #2FA9B0);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.5), 0 4px 16px rgba(79,216,224,0.35);
+    transition:transform 0.45s cubic-bezier(.3,1.3,.5,1), width 0.45s cubic-bezier(.3,1.3,.5,1);
+    z-index:0;
+  }
+  .app-nav-btn{
+    position:relative;
+    z-index:1;
+    flex:1;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    background:transparent;
+    border:none;
+    color:var(--text-dim);
+    font-size:14px;
+    font-weight:600;
+    padding:11px 16px;
+    border-radius:999px;
+    transition:color 0.3s ease;
+  }
+  .app-nav-btn svg{width:17px; height:17px; flex:0 0 auto;}
+  .app-nav-btn.active{color:#062223;}
+  .app-nav.single .app-nav-indicator{width:calc(100% - 10px);}
+
+  .period-bar{margin-bottom:22px;}
+  .period-bar .history-manual{margin-bottom:0;}
+  body.view-depenses #filterLive{display:none;}
+
+  /* ===== Vue Dépenses ===== */
+  .net-card .num{color:#78FFA0;}
+  .net-card.negative .num{color:var(--glass-coral);}
+  #depensesView .stat .num{font-size:clamp(20px,3.4vw,30px);}
+
+  .expense-table td.exp-amount{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:15px;
+    white-space:nowrap;
+    color:var(--glass-coral);
+  }
+  .expense-table tbody tr{cursor:default;}
+  .exp-date{font-size:13px; color:var(--text-dim); white-space:nowrap; font-weight:500;}
+  .exp-libelle{font-weight:700; font-size:14.5px; color:var(--text);}
+  .exp-note{font-size:12px; color:var(--text-dim); margin-top:3px;}
+  .exp-meta{font-size:11px; color:var(--text-dim); margin-top:4px; opacity:0.8;}
+
+  .cat-badge{
+    display:inline-block;
+    padding:4px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:600;
+    white-space:nowrap;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .cat-badge.stock{background:rgba(79,216,224,0.16); color:var(--glass-cyan); border:1px solid rgba(79,216,224,0.4);}
+  .cat-badge.transport{background:rgba(255,196,90,0.16); color:#FFD27A; border:1px solid rgba(255,196,90,0.4);}
+  .cat-badge.pub{background:rgba(179,157,255,0.18); color:#C9B8FF; border:1px solid rgba(179,157,255,0.45);}
+  .cat-badge.emballage{background:rgba(120,255,160,0.14); color:#78FFA0; border:1px solid rgba(120,255,160,0.4);}
+  .cat-badge.autre{background:rgba(160,160,170,0.18); color:#B8B8C4; border:1px solid rgba(160,160,170,0.4);}
+
+  #expensePanel.editing .edit-tag{display:inline-block;}
+  #expensePanel.editing .btn-cancel{display:inline-block;}
+
+  @media (max-width:600px){
+    .app-nav{max-width:100%; margin-bottom:18px;}
+    .app-nav-btn{font-size:13.5px; padding:10px 12px;}
+    .expense-table td.exp-amount{font-size:16px;}
   }
 
   /* Filtre par statut */
@@ -1188,6 +1366,11 @@
     .glass::before{transition:none;}
     .detail-box{animation:none;}
     .loading-spinner{animation:none;}
+    .glass, tbody tr{animation:none !important;}
+    .reveal{opacity:1 !important; transform:none !important;}
+    header h1, .auth-brand h1{animation:none;}
+    .stat .num.bump{animation:none;}
+    .stat:hover{transform:none;}
   }
 
   /* Responsive: tablette */
@@ -1358,8 +1541,8 @@
 
   <header>
     <div class="eyebrow">Mode Nak'Ahy</div>
-    <h1>Répartition des clients</h1>
-    <p>Suivez les commandes, la livraison et le paiement de chaque client en un coup d'œil.</p>
+    <h1 id="appTitle">Répartition des clients</h1>
+    <p id="appSubtitle">Suivez les commandes, la livraison et le paiement de chaque client en un coup d'œil.</p>
     <div class="sync-status loading" id="syncStatus">Connexion à la base…</div>
     <div class="welcome-badge">
       <span class="welcome-dot"></span>
@@ -1371,6 +1554,53 @@
     <div class="pending-requests-label">Demandes de compte livreur en attente</div>
     <div id="pendingRequestsList"></div>
   </div>
+
+  <nav class="app-nav glass" id="appNav" aria-label="Navigation principale">
+    <span class="app-nav-indicator" id="appNavIndicator"></span>
+    <button type="button" class="app-nav-btn active" data-view="clients">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Clients
+    </button>
+    <button type="button" class="app-nav-btn" data-view="depenses" id="navDepensesBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+      Dépenses
+    </button>
+  </nav>
+
+  <div class="period-bar">
+    <div class="filter-hint">
+      <span class="filter-hint-icon">⚠️</span>
+      Change la date ci-dessous pour voir les commandes et les dépenses d'une période précise.
+    </div>
+
+    <div class="history-manual">
+      <span>Aller à :</span>
+      <select id="filterMonth">
+        <option value="">Tous les mois</option>
+        <option value="01">Janvier</option>
+        <option value="02">Février</option>
+        <option value="03">Mars</option>
+        <option value="04">Avril</option>
+        <option value="05">Mai</option>
+        <option value="06">Juin</option>
+        <option value="07">Juillet</option>
+        <option value="08">Août</option>
+        <option value="09">Septembre</option>
+        <option value="10">Octobre</option>
+        <option value="11">Novembre</option>
+        <option value="12">Décembre</option>
+      </select>
+      <select id="filterYear"></select>
+      <select id="filterWeek" style="display:none;">
+        <option value="">Toutes les semaines</option>
+      </select>
+      <select id="filterLive">
+        <option value="">Toutes les lives</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="clientsView">
 
   <div class="stats">
     <div class="glass stat">
@@ -1494,38 +1724,7 @@
     </form>
   </div>
 
-  <div class="filter-hint">
-    <span class="filter-hint-icon">⚠️</span>
-    Change la date ci-dessous si tu veux voir les commandes d'une période précise.
-  </div>
-
   <div class="filter-search-row">
-    <div class="history-manual">
-      <span>Aller à :</span>
-      <select id="filterMonth">
-        <option value="">Tous les mois</option>
-        <option value="01">Janvier</option>
-        <option value="02">Février</option>
-        <option value="03">Mars</option>
-        <option value="04">Avril</option>
-        <option value="05">Mai</option>
-        <option value="06">Juin</option>
-        <option value="07">Juillet</option>
-        <option value="08">Août</option>
-        <option value="09">Septembre</option>
-        <option value="10">Octobre</option>
-        <option value="11">Novembre</option>
-        <option value="12">Décembre</option>
-      </select>
-      <select id="filterYear"></select>
-      <select id="filterWeek" style="display:none;">
-        <option value="">Toutes les semaines</option>
-      </select>
-      <select id="filterLive">
-        <option value="">Toutes les lives</option>
-      </select>
-    </div>
-
     <div class="search-row">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
       <input type="text" id="search" class="glass" placeholder="Rechercher un client ou un modèle...">
@@ -1575,6 +1774,112 @@
       <button type="button" class="btn-cancel export-btn" id="exportExcelBtn" style="display:inline-flex;">📊 Télécharger Excel</button>
     </div>
   </div>
+
+  </div><!-- /clientsView -->
+
+  <div id="depensesView" style="display:none;">
+
+    <div class="stats">
+      <div class="glass stat">
+        <span class="num" id="depVentes">0 Ar</span>
+        <span class="label">Ventes (sans frais)</span>
+      </div>
+      <div class="glass stat coral">
+        <span class="num" id="depTotal">0 Ar</span>
+        <span class="label">Dépenses</span>
+      </div>
+      <div class="glass stat net-card" id="depNetCard">
+        <span class="num" id="depNet">0 Ar</span>
+        <span class="label">Bénéfice net</span>
+      </div>
+      <div class="glass stat">
+        <span class="num" id="depCount">0</span>
+        <span class="label">Nombre de dépenses</span>
+      </div>
+    </div>
+
+    <div class="glass form-panel" id="expensePanel">
+      <h2>
+        Ajouter une dépense <span class="edit-tag" id="expenseEditTag">Modification en cours</span>
+      </h2>
+      <form id="expenseForm">
+        <div class="section-label">Dépense</div>
+        <div class="client-row">
+          <div class="field">
+            <label for="expLibelle">Libellé</label>
+            <input type="text" id="expLibelle" placeholder="Ex: Achat de 10 sacs chez le fournisseur" required autocomplete="off">
+          </div>
+          <div class="field narrow">
+            <label for="expMontant">Montant (Ar)</label>
+            <input type="number" id="expMontant" min="0" step="500" placeholder="Ex: 150000" required>
+          </div>
+        </div>
+        <div class="client-row">
+          <div class="field narrow">
+            <label for="expCategorie">Catégorie</label>
+            <select id="expCategorie">
+              <option value="stock">Achat de sacs / stock</option>
+              <option value="transport">Transport / livraison</option>
+              <option value="pub">Publicité / Live Facebook</option>
+              <option value="emballage">Emballage</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+          <div class="field narrow">
+            <label for="expDate">Date</label>
+            <input type="date" id="expDate" required>
+          </div>
+        </div>
+        <div class="client-row">
+          <div class="field">
+            <label for="expNote">Note (optionnel)</label>
+            <input type="text" id="expNote" placeholder="Détail, fournisseur, etc." autocomplete="off">
+          </div>
+        </div>
+        <div class="form-footer">
+          <button type="button" class="btn-cancel" id="expenseCancelBtn">Annuler</button>
+          <button type="submit" class="btn-add" id="expenseSubmitBtn">Enregistrer la dépense</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="glass table-panel">
+      <div class="table-scroll">
+        <table class="expense-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Libellé</th>
+              <th>Catégorie</th>
+              <th>Montant</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="expenseBody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="expenseEmpty">Aucune dépense pour cette période.</div>
+    </div>
+
+    <div class="glass table-summary">
+      <div class="summary-label" id="depSummaryLabel">Bilan — toutes les périodes</div>
+      <div class="summary-row">
+        <div class="summary-item no-frais">
+          <span class="s-key">Ventes (sans frais)</span>
+          <span class="s-val" id="depSumVentes">0 Ar</span>
+        </div>
+        <div class="summary-item with-frais">
+          <span class="s-key">Dépenses</span>
+          <span class="s-val" id="depSumDepenses">0 Ar</span>
+        </div>
+        <div class="summary-item delivery-item">
+          <span class="s-key">Bénéfice net</span>
+          <span class="s-val" id="depSumNet">0 Ar</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /depensesView -->
 
   <div class="account-actions">
     <button type="button" id="logoutBtn" class="btn-cancel" style="display:inline-block;">Déconnexion</button>
@@ -2057,6 +2362,17 @@
     if(!unsubscribeSnapshot) startListening();
     startPresence();
     if(role === 'equipe') startPendingRequestsWatch(); else stopPendingRequestsWatch();
+    if(role === 'equipe'){
+      appNav.style.display = '';
+      startExpensesListening();
+      let savedView = 'clients';
+      try { savedView = localStorage.getItem('nakahy-view') || 'clients'; } catch (err) {}
+      switchView(savedView === 'depenses' ? 'depenses' : 'clients', false);
+    } else {
+      appNav.style.display = 'none';
+      stopExpensesListening();
+      switchView('clients', false);
+    }
   }
 
   function startPresence(){
@@ -2267,6 +2583,7 @@
         if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
         stopPresence();
         stopPendingRequestsWatch();
+        stopExpensesListening();
         currentUserRole = 'equipe';
         currentUserStatus = 'approved';
         document.body.classList.remove('livreur-theme');
@@ -2788,10 +3105,10 @@
     const sacsCount = orders.reduce((s,o) => s + o.produits.length, 0);
     const totalAr = orders.filter(countsTowardTotal).reduce((s,o) => s + orderGrandTotal(o), 0);
 
-    document.getElementById('statClients').textContent = orders.length;
-    document.getElementById('statSacs').textContent = sacsCount;
-    document.getElementById('statAttente').textContent = orders.filter(o => o.statut === 'attente').length;
-    document.getElementById('statTotal').textContent = formatAr(totalAr);
+    animateNumber(document.getElementById('statClients'), orders.length, n => String(n));
+    animateNumber(document.getElementById('statSacs'), sacsCount, n => String(n));
+    animateNumber(document.getElementById('statAttente'), orders.filter(o => o.statut === 'attente').length, n => String(n));
+    animateNumber(document.getElementById('statTotal'), totalAr, n => formatAr(n));
 
     const sumNoFrais = filtered.filter(countsTowardTotal).reduce((s,o) => s + produitsTotal(o), 0);
     const sumWithFrais = filtered.filter(countsTowardTotal).reduce((s,o) => s + orderGrandTotal(o), 0);
@@ -2803,7 +3120,205 @@
       .filter(countsTowardDeliveryTotal)
       .reduce((s,o) => s + (o.fraisLivraison ? o.fraisMontant : 0), 0);
     document.getElementById('deliverySummaryVal').textContent = formatAr(sumFraisLivraison);
+    renderExpenses();
   }
+
+  // ===================== DÉPENSES =====================
+  const appNav = document.getElementById('appNav');
+  const appNavIndicator = document.getElementById('appNavIndicator');
+  const clientsView = document.getElementById('clientsView');
+  const depensesView = document.getElementById('depensesView');
+  const expenseForm = document.getElementById('expenseForm');
+  const expensePanel = document.getElementById('expensePanel');
+  const expenseBody = document.getElementById('expenseBody');
+  const expenseEmpty = document.getElementById('expenseEmpty');
+  const expenseSubmitBtn = document.getElementById('expenseSubmitBtn');
+  const expenseCancelBtn = document.getElementById('expenseCancelBtn');
+
+  const expenseCategories = {
+    stock: 'Achat de sacs / stock',
+    transport: 'Transport / livraison',
+    pub: 'Publicité / Live Facebook',
+    emballage: 'Emballage',
+    autre: 'Autre'
+  };
+
+  let expenses = [];
+  let editingExpenseId = null;
+  let unsubscribeExpenses = null;
+  let currentView = 'clients';
+
+  function switchView(view, remember = true){
+    currentView = view;
+    clientsView.style.display = view === 'clients' ? '' : 'none';
+    depensesView.style.display = view === 'depenses' ? '' : 'none';
+    document.body.classList.toggle('view-depenses', view === 'depenses');
+    appNav.querySelectorAll('.app-nav-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.view === view);
+    });
+    appNavIndicator.style.transform = view === 'depenses' ? 'translateX(100%)' : 'translateX(0)';
+    document.getElementById('appTitle').textContent = view === 'depenses' ? 'Suivi des dépenses' : 'Répartition des clients';
+    document.getElementById('appSubtitle').textContent = view === 'depenses'
+      ? 'Enregistrez les dépenses et voyez ce qu\'il reste réellement sur les ventes.'
+      : 'Suivez les commandes, la livraison et le paiement de chaque client en un coup d\'œil.';
+    if(remember){ try { localStorage.setItem('nakahy-view', view); } catch (err) {} }
+    if(view === 'depenses') renderExpenses();
+  }
+
+  appNav.querySelectorAll('.app-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchView(btn.dataset.view));
+  });
+
+  function startExpensesListening(){
+    if(unsubscribeExpenses || !db) return;
+    unsubscribeExpenses = onSnapshot(collection(db, 'depenses'), (snapshot) => {
+      expenses = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      expenses.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      renderExpenses();
+    }, (err) => {
+      console.error('Dépenses :', err);
+      expenseEmpty.textContent = "Impossible de charger les dépenses (vérifie les règles Firestore pour la collection « depenses »).";
+      expenseEmpty.style.display = 'block';
+    });
+  }
+
+  function stopExpensesListening(){
+    if(unsubscribeExpenses){ unsubscribeExpenses(); unsubscribeExpenses = null; }
+    expenses = [];
+    resetExpenseForm();
+  }
+
+  function inSelectedPeriod(dateStr){
+    if(!historyFilter) return true;
+    if(!dateStr || !dateStr.startsWith(historyFilter)) return false;
+    if(weekFilter && historyFilter.length === 7){
+      const day = parseInt(dateStr.slice(8, 10), 10);
+      return day >= (weekFilter - 1) * 7 + 1 && day <= weekFilter * 7;
+    }
+    return true;
+  }
+
+  function getFilteredExpenses(){
+    return expenses.filter(e => inSelectedPeriod(e.date));
+  }
+
+  function renderExpenses(){
+    if(!expenseBody) return;
+    const list = getFilteredExpenses();
+
+    expenseBody.innerHTML = '';
+    expenseEmpty.textContent = 'Aucune dépense pour cette période.';
+    expenseEmpty.style.display = list.length === 0 ? 'block' : 'none';
+
+    list.forEach(e => {
+      const tr = document.createElement('tr');
+      const cat = expenseCategories[e.categorie] ? e.categorie : 'autre';
+      tr.innerHTML = `
+        <td><span class="exp-date">${formatDate(e.date)}</span></td>
+        <td>
+          <div class="exp-libelle">${escapeHtml(e.libelle || '')}</div>
+          ${e.note ? `<div class="exp-note">${escapeHtml(e.note)}</div>` : ''}
+          ${e.ajoutePar ? `<div class="exp-meta">Ajouté par ${escapeHtml(e.ajoutePar)}</div>` : ''}
+        </td>
+        <td><span class="cat-badge ${cat}">${expenseCategories[cat]}</span></td>
+        <td class="exp-amount">− ${formatAr(e.montant || 0)}</td>
+        <td class="actions">
+          <button class="icon-btn edit-btn" data-action="edit" title="Modifier" aria-label="Modifier">${iconEdit}</button>
+          <button class="icon-btn del-btn" data-action="del" title="Supprimer" aria-label="Supprimer">${iconTrash}</button>
+        </td>
+      `;
+      tr.querySelector('[data-action="edit"]').addEventListener('click', () => editExpense(e.id));
+      tr.querySelector('[data-action="del"]').addEventListener('click', () => deleteExpense(e.id));
+      expenseBody.appendChild(tr);
+    });
+
+    // Bilan de la période : ventes (sans frais de livraison) − dépenses
+    const ventes = orders
+      .filter(o => inSelectedPeriod(o.dateCommande))
+      .filter(countsTowardTotal)
+      .reduce((s, o) => s + produitsTotal(o), 0);
+    const totalDepenses = list.reduce((s, e) => s + (Number(e.montant) || 0), 0);
+    const net = ventes - totalDepenses;
+
+    document.getElementById('depVentes').textContent = formatAr(ventes);
+    document.getElementById('depTotal').textContent = formatAr(totalDepenses);
+    document.getElementById('depNet').textContent = (net < 0 ? '− ' : '') + formatAr(Math.abs(net));
+    document.getElementById('depCount').textContent = String(list.length);
+    document.getElementById('depNetCard').classList.toggle('negative', net < 0);
+
+    document.getElementById('depSummaryLabel').textContent = `Bilan — ${historyFilter ? filterLabel(historyFilter, weekFilter) : 'toutes les périodes'}`;
+    document.getElementById('depSumVentes').textContent = formatAr(ventes);
+    document.getElementById('depSumDepenses').textContent = '− ' + formatAr(totalDepenses);
+    const netEl = document.getElementById('depSumNet');
+    netEl.textContent = (net < 0 ? '− ' : '') + formatAr(Math.abs(net));
+    netEl.style.color = net < 0 ? 'var(--glass-coral)' : '';
+  }
+
+  function resetExpenseForm(){
+    editingExpenseId = null;
+    if(!expenseForm) return;
+    expenseForm.reset();
+    document.getElementById('expDate').value = todayStr();
+    document.getElementById('expCategorie').value = 'stock';
+    expensePanel.classList.remove('editing');
+    expenseSubmitBtn.textContent = 'Enregistrer la dépense';
+  }
+
+  function editExpense(id){
+    const e = expenses.find(x => x.id === id);
+    if(!e) return;
+    editingExpenseId = id;
+    document.getElementById('expLibelle').value = e.libelle || '';
+    document.getElementById('expMontant').value = e.montant || '';
+    document.getElementById('expCategorie').value = expenseCategories[e.categorie] ? e.categorie : 'autre';
+    document.getElementById('expDate').value = e.date || todayStr();
+    document.getElementById('expNote').value = e.note || '';
+    expensePanel.classList.add('editing');
+    expenseSubmitBtn.textContent = 'Enregistrer les modifications';
+    expensePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  async function deleteExpense(id){
+    if(!confirm('Supprimer cette dépense ?')) return;
+    try {
+      await deleteDoc(doc(db, 'depenses', id));
+      if(editingExpenseId === id) resetExpenseForm();
+    } catch (err) {
+      console.error(err);
+      alert('Erreur de suppression de la dépense.');
+    }
+  }
+
+  expenseCancelBtn.addEventListener('click', resetExpenseForm);
+
+  expenseForm.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const libelle = document.getElementById('expLibelle').value.trim();
+    const montant = parseFloat(document.getElementById('expMontant').value) || 0;
+    const categorie = document.getElementById('expCategorie').value;
+    const date = document.getElementById('expDate').value;
+    const note = document.getElementById('expNote').value.trim();
+    if(!libelle || montant <= 0 || !date) return;
+
+    const data = { libelle, montant, categorie, date, note };
+    expenseSubmitBtn.disabled = true;
+    try {
+      if(editingExpenseId){
+        await updateDoc(doc(db, 'depenses', editingExpenseId), data);
+      } else {
+        const ajoutePar = auth?.currentUser?.displayName || auth?.currentUser?.email || 'Inconnu';
+        await addDoc(collection(db, 'depenses'), { ...data, ajoutePar, createdAt: serverTimestamp() });
+      }
+      resetExpenseForm();
+    } catch (err) {
+      console.error(err);
+      alert("Erreur d'enregistrement de la dépense — vérifie la connexion et les règles Firestore.");
+    } finally {
+      expenseSubmitBtn.disabled = false;
+    }
+  });
+
+  document.getElementById('expDate').value = todayStr();
 
   document.getElementById('dateCommande').value = todayStr();
   populateYearSelect();
@@ -2846,6 +3361,48 @@
   scrollTopBtn.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+
+  // Compteur animé (ex : 0 → 36), avec petit rebond à la fin
+  function animateNumber(el, to, format){
+    if(!el) return;
+    const from = typeof el._val === 'number' ? el._val : 0;
+    el._val = to;
+    if(from === to){ el.textContent = format(to); return; }
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce){ el.textContent = format(to); return; }
+    const duration = 900;
+    const start = performance.now();
+    cancelAnimationFrame(el._raf);
+    function step(now){
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = format(Math.round(from + (to - from) * eased));
+      if(t < 1){ el._raf = requestAnimationFrame(step); }
+      else {
+        el.classList.remove('bump');
+        void el.offsetWidth;
+        el.classList.add('bump');
+      }
+    }
+    el._raf = requestAnimationFrame(step);
+  }
+
+  // Apparition des panneaux au défilement
+  (function scrollReveal(){
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce || !('IntersectionObserver' in window)) return;
+    const els = document.querySelectorAll('#appView .glass:not(input), .account-actions');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(!entry.isIntersecting) return;
+        const el = entry.target;
+        el.classList.add('in-view');
+        io.unobserve(el);
+        setTimeout(() => el.classList.remove('reveal', 'in-view'), 1100);
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(el => { el.classList.add('reveal'); io.observe(el); });
+  })();
 
   if('serviceWorker' in navigator){
     window.addEventListener('load', () => {
