@@ -1014,7 +1014,8 @@
     white-space:nowrap;
     color:var(--glass-coral);
   }
-  .expense-table tbody tr{cursor:default;}
+  .expense-table tbody tr{cursor:pointer;}
+  .expense-table tbody tr.detail-row{cursor:default;}
   .exp-date{font-size:13px; color:var(--text-dim); white-space:nowrap; font-weight:500;}
   .exp-libelle{font-weight:700; font-size:14.5px; color:var(--text);}
   .exp-note{font-size:12px; color:var(--text-dim); margin-top:3px;}
@@ -1631,6 +1632,69 @@
   @media (max-width:600px){
     textarea{font-size:16px;}
   }
+
+  /* ===== Onglet Ventes (sacs écoulés) ===== */
+  .app-nav{max-width:520px;}
+  .app-nav-indicator{width:calc((100% - 10px) / 3);}
+  .panel-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:16px 18px 6px;
+    font-family:'Fraunces', serif;
+    font-size:17px;
+    font-weight:600;
+    color:var(--text);
+  }
+  .panel-count{
+    font-family:'Inter', sans-serif;
+    font-size:12px;
+    font-weight:700;
+    color:var(--glass-cyan);
+    background:rgba(79,216,224,0.14);
+    border:1px solid rgba(79,216,224,0.35);
+    border-radius:999px;
+    padding:2px 10px;
+  }
+  #ventesView .table-panel{margin-bottom:18px;}
+  #ventesView .stat .num{font-size:clamp(20px,3.4vw,30px);}
+  .sales-table tbody tr{cursor:default;}
+  .sales-table tbody tr:hover td:first-child, .sales-table tbody tr:hover td:last-child{border-radius:0;}
+  .sale-date{font-size:13px; color:var(--text-dim); white-space:nowrap; font-weight:500;}
+  .sale-bag{font-weight:700; font-size:14.5px; color:var(--text);}
+  .sale-client{font-size:13.5px; color:var(--text); font-weight:500;}
+  .sale-price, .sale-total{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:15px;
+    white-space:nowrap;
+  }
+  .sale-total{color:var(--glass-cyan);}
+  .sale-num{font-family:'JetBrains Mono', monospace; font-weight:600; font-size:14px;}
+  .rank{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;
+    height:22px;
+    margin-right:8px;
+    border-radius:50%;
+    font-size:11px;
+    font-weight:700;
+    color:var(--text-dim);
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--panel-border);
+    flex:0 0 auto;
+  }
+  .rank.r1{color:#1a1200; background:linear-gradient(135deg,#FFE08A,#E8B83A); border-color:transparent;}
+  .rank.r2{color:#15181c; background:linear-gradient(135deg,#E8EDF2,#AEB8C2); border-color:transparent;}
+  .rank.r3{color:#1c0f05; background:linear-gradient(135deg,#F2C39B,#C7864E); border-color:transparent;}
+  .client-rank-cell{display:flex; align-items:center;}
+  @media (max-width:600px){
+    .app-nav-btn{gap:6px; padding:10px 6px; font-size:13px;}
+    .app-nav-btn svg{width:15px; height:15px;}
+    .panel-title{padding:14px 12px 4px;}
+  }
 </style>
 </head>
 <body>
@@ -1771,6 +1835,10 @@
     <button type="button" class="app-nav-btn active" data-view="clients">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Clients
+    </button>
+    <button type="button" class="app-nav-btn" data-view="ventes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Ventes
     </button>
     <button type="button" class="app-nav-btn" data-view="depenses" id="navDepensesBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
@@ -2001,6 +2069,119 @@
   </div>
 
   </div><!-- /clientsView -->
+
+  <div id="ventesView" style="display:none;">
+
+    <div class="period-bar">
+      <div class="filter-hint">
+        <span class="filter-hint-icon">⚠️</span>
+        Change la date ci-dessous pour voir les sacs écoulés d'une période précise (indépendant des autres onglets).
+      </div>
+      <div class="history-manual">
+        <span>Aller à :</span>
+        <select id="salesFilterMonth">
+          <option value="">Tous les mois</option>
+          <option value="01">Janvier</option>
+          <option value="02">Février</option>
+          <option value="03">Mars</option>
+          <option value="04">Avril</option>
+          <option value="05">Mai</option>
+          <option value="06">Juin</option>
+          <option value="07">Juillet</option>
+          <option value="08">Août</option>
+          <option value="09">Septembre</option>
+          <option value="10">Octobre</option>
+          <option value="11">Novembre</option>
+          <option value="12">Décembre</option>
+        </select>
+        <select id="salesFilterYear"></select>
+        <select id="salesFilterWeek" style="display:none;">
+          <option value="">Toutes les semaines</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="glass stat">
+        <span class="num" id="venSacs">0</span>
+        <span class="label">Sacs écoulés</span>
+      </div>
+      <div class="glass stat coral">
+        <span class="num" id="venClients">0</span>
+        <span class="label">Clients</span>
+      </div>
+      <div class="glass stat">
+        <span class="num" id="venChiffre">0 Ar</span>
+        <span class="label">Ventes (sans frais)</span>
+      </div>
+      <div class="glass stat coral">
+        <span class="num" id="venMoyen">0 Ar</span>
+        <span class="label">Prix moyen / sac</span>
+      </div>
+    </div>
+
+    <div class="glass table-panel">
+      <div class="panel-title">
+        <span>Sacs écoulés</span>
+        <span class="panel-count" id="venBagsCount">0</span>
+      </div>
+      <div class="table-scroll">
+        <table class="sales-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Sac</th>
+              <th>Client</th>
+              <th>Statut</th>
+              <th>Prix</th>
+            </tr>
+          </thead>
+          <tbody id="venBagsBody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="venBagsEmpty">Aucun sac écoulé pour cette période.</div>
+    </div>
+
+    <div class="glass table-panel">
+      <div class="panel-title">
+        <span>Total par client</span>
+        <span class="panel-count" id="venClientsCount">0</span>
+      </div>
+      <div class="table-scroll">
+        <table class="sales-table">
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Commandes</th>
+              <th>Sacs</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="venClientsBody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="venClientsEmpty">Aucun client pour cette période.</div>
+    </div>
+
+    <div class="glass table-summary">
+      <div class="summary-label" id="venSummaryLabel">Total — toutes les périodes</div>
+      <div class="summary-row">
+        <div class="summary-item no-frais">
+          <span class="s-key">Sacs écoulés</span>
+          <span class="s-val" id="venSumSacs">0</span>
+        </div>
+        <div class="summary-item with-frais">
+          <span class="s-key">Clients</span>
+          <span class="s-val" id="venSumClients">0</span>
+        </div>
+        <div class="summary-item delivery-item">
+          <span class="s-key">Ventes (sans frais)</span>
+          <span class="s-val" id="venSumChiffre">0 Ar</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /ventesView -->
 
   <div id="depensesView" style="display:none;">
 
@@ -2620,7 +2801,7 @@
       startExpensesListening();
       let savedView = 'clients';
       try { savedView = localStorage.getItem('nakahy-view') || 'clients'; } catch (err) {}
-      switchView(savedView === 'depenses' ? 'depenses' : 'clients', false);
+      switchView(['clients','ventes','depenses'].includes(savedView) ? savedView : 'clients', false);
     } else {
       appNav.style.display = 'none';
       stopExpensesListening();
@@ -2665,6 +2846,7 @@
       syncStatus.classList.add('ok');
       populateYearSelect();
       populateLiveOptions();
+      populateSalesYearSelect();
       updateClientHint();
       render();
     }, (err) => {
@@ -3388,6 +3570,7 @@
       .reduce((s,o) => s + (o.fraisLivraison ? o.fraisMontant : 0), 0);
     document.getElementById('deliverySummaryVal').textContent = formatAr(sumFraisLivraison);
     renderExpenses();
+    renderVentes();
   }
 
   // ===================== DÉPENSES =====================
@@ -3395,6 +3578,7 @@
   const appNavIndicator = document.getElementById('appNavIndicator');
   const clientsView = document.getElementById('clientsView');
   const depensesView = document.getElementById('depensesView');
+  const ventesView = document.getElementById('ventesView');
   const expenseForm = document.getElementById('expenseForm');
   const expensePanel = document.getElementById('expensePanel');
   const expenseBody = document.getElementById('expenseBody');
@@ -3413,17 +3597,26 @@
   let expenses = [];
   const recentlyAddedExpenseIds = new Set();
   let editingExpenseId = null;
+  let expandedExpenseId = null;
   let unsubscribeExpenses = null;
   let currentView = 'clients';
   let currentViewShown = null;
 
+  const viewMeta = {
+    clients: { title: 'Répartition des clients', subtitle: "Suivez les commandes, la livraison et le paiement de chaque client en un coup d'œil." },
+    ventes: { title: 'Sacs écoulés', subtitle: "Vue d'ensemble des sacs vendus, avec le total de chaque client." },
+    depenses: { title: 'Suivi des dépenses', subtitle: "Enregistrez les dépenses et voyez ce qu'il reste réellement sur les ventes." }
+  };
+  const viewOrder = ['clients', 'ventes', 'depenses'];
+
   function switchView(view, remember = true){
+    if(!viewMeta[view]) view = 'clients';
     currentView = view;
     const changed = currentViewShown !== view;
-    clientsView.style.display = view === 'clients' ? '' : 'none';
-    depensesView.style.display = view === 'depenses' ? '' : 'none';
+    const views = { clients: clientsView, ventes: ventesView, depenses: depensesView };
+    Object.entries(views).forEach(([key, el]) => { el.style.display = key === view ? '' : 'none'; });
     if(changed && currentViewShown !== null){
-      const shown = view === 'depenses' ? depensesView : clientsView;
+      const shown = views[view];
       shown.classList.remove('view-enter');
       void shown.offsetWidth;
       shown.classList.add('view-enter');
@@ -3433,11 +3626,9 @@
     appNav.querySelectorAll('.app-nav-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.view === view);
     });
-    appNavIndicator.style.transform = view === 'depenses' ? 'translateX(100%)' : 'translateX(0)';
-    document.getElementById('appTitle').textContent = view === 'depenses' ? 'Suivi des dépenses' : 'Répartition des clients';
-    document.getElementById('appSubtitle').textContent = view === 'depenses'
-      ? 'Enregistrez les dépenses et voyez ce qu\'il reste réellement sur les ventes.'
-      : 'Suivez les commandes, la livraison et le paiement de chaque client en un coup d\'œil.';
+    appNavIndicator.style.transform = `translateX(${viewOrder.indexOf(view) * 100}%)`;
+    document.getElementById('appTitle').textContent = viewMeta[view].title;
+    document.getElementById('appSubtitle').textContent = viewMeta[view].subtitle;
     if(remember){ try { localStorage.setItem('nakahy-view', view); } catch (err) {} }
     if(view === 'depenses'){
       if(changed){
@@ -3447,6 +3638,15 @@
         });
       }
       renderExpenses();
+    }
+    if(view === 'ventes'){
+      if(changed){
+        ['venSacs','venClients','venChiffre','venMoyen','venSumSacs','venSumClients','venSumChiffre'].forEach(id => {
+          const el = document.getElementById(id);
+          if(el) el._val = 0;
+        });
+      }
+      renderVentes();
     }
   }
 
@@ -3582,14 +3782,22 @@
     expenseEmpty.style.display = list.length === 0 ? 'block' : 'none';
 
     list.forEach(e => {
+      const isOpen = e.id === expandedExpenseId;
       const tr = document.createElement('tr');
+      if(isOpen) tr.classList.add('expanded');
+      if(e.id === editingExpenseId) tr.classList.add('editing-row');
       if(recentlyAddedExpenseIds.has(e.id)){
         tr.classList.add('exp-row-new');
         recentlyAddedExpenseIds.delete(e.id);
       }
       const cat = expenseCategories[e.categorie] ? e.categorie : 'autre';
       tr.innerHTML = `
-        <td><span class="exp-date">${formatDate(e.date)}</span></td>
+        <td>
+          <div class="client-cell">
+            <span class="row-toggle">+</span>
+            <span class="exp-date">${formatDate(e.date)}</span>
+          </div>
+        </td>
         <td>
           <div class="exp-libelle">${escapeHtml(e.libelle || '')}</div>
           ${e.note ? `<div class="exp-note">${escapeHtml(e.note)}</div>` : ''}
@@ -3602,9 +3810,37 @@
           <button class="icon-btn del-btn" data-action="del" title="Supprimer" aria-label="Supprimer">${iconTrash}</button>
         </td>
       `;
-      tr.querySelector('[data-action="edit"]').addEventListener('click', () => editExpense(e.id));
-      tr.querySelector('[data-action="del"]').addEventListener('click', () => deleteExpense(e.id));
+      tr.querySelector('[data-action="edit"]').addEventListener('click', (ev) => { ev.stopPropagation(); editExpense(e.id); });
+      tr.querySelector('[data-action="del"]').addEventListener('click', (ev) => { ev.stopPropagation(); deleteExpense(e.id); });
+      tr.addEventListener('click', () => {
+        expandedExpenseId = expandedExpenseId === e.id ? null : e.id;
+        renderExpenses();
+      });
       expenseBody.appendChild(tr);
+
+      if(isOpen){
+        let enregistre = '—';
+        if(e.createdAt && typeof e.createdAt.toDate === 'function'){
+          const d = e.createdAt.toDate();
+          enregistre = d.toLocaleDateString('fr-FR') + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        }
+        const dtr = document.createElement('tr');
+        dtr.className = 'detail-row';
+        dtr.innerHTML = `
+          <td colspan="5">
+            <div class="detail-box">
+              <div class="detail-item"><div class="d-key">Libellé</div><div class="d-val">${escapeHtml(e.libelle || '—')}</div></div>
+              <div class="detail-item"><div class="d-key">Montant</div><div class="d-val">− ${formatAr(e.montant || 0)}</div></div>
+              <div class="detail-item"><div class="d-key">Catégorie</div><div class="d-val">${expenseCategories[cat]}</div></div>
+              <div class="detail-item"><div class="d-key">Date de la dépense</div><div class="d-val">${formatDate(e.date)}</div></div>
+              <div class="detail-item"><div class="d-key">Ajouté par</div><div class="d-val">${escapeHtml(e.ajoutePar || '—')}</div></div>
+              <div class="detail-item"><div class="d-key">Enregistré le</div><div class="d-val">${enregistre}</div></div>
+              <div class="detail-item detail-desc"><div class="d-key">Note</div><div class="d-val">${e.note ? escapeHtml(e.note) : '—'}</div></div>
+            </div>
+          </td>
+        `;
+        expenseBody.appendChild(dtr);
+      }
     });
 
     // Bilan de la période : ventes (sans frais de livraison) − dépenses
@@ -3696,6 +3932,165 @@
 
   document.getElementById('expDate').value = todayStr();
   initDepFilter();
+
+  // ===================== VENTES (sacs écoulés) =====================
+  const salesFilterMonthEl = document.getElementById('salesFilterMonth');
+  const salesFilterYearEl = document.getElementById('salesFilterYear');
+  const salesFilterWeekEl = document.getElementById('salesFilterWeek');
+  let salesHistoryFilter = null;
+  let salesWeekFilter = null;
+
+  function populateSalesYearSelect(){
+    const curYear = new Date().getFullYear();
+    let minYear = curYear - 1;
+    orders.forEach(o => {
+      const y = o.dateCommande ? parseInt(o.dateCommande.slice(0, 4), 10) : 0;
+      if(y && y < minYear) minYear = y;
+    });
+    const prev = salesFilterYearEl.value || String(curYear);
+    salesFilterYearEl.innerHTML = '';
+    for(let y = minYear; y <= curYear + 5; y++){
+      const opt = document.createElement('option');
+      opt.value = String(y);
+      opt.textContent = y;
+      salesFilterYearEl.appendChild(opt);
+    }
+    salesFilterYearEl.value = [...salesFilterYearEl.options].some(o => o.value === prev) ? prev : String(curYear);
+  }
+
+  function populateSalesWeekSelect(){
+    const month = salesFilterMonthEl.value;
+    if(!month){
+      salesFilterWeekEl.style.display = 'none';
+      salesFilterWeekEl.innerHTML = '<option value="">Toutes les semaines</option>';
+      return;
+    }
+    salesFilterWeekEl.style.display = 'inline-block';
+    const total = daysInMonth(parseInt(salesFilterYearEl.value, 10), parseInt(month, 10));
+    const prev = salesFilterWeekEl.value;
+    salesFilterWeekEl.innerHTML = '<option value="">Toutes les semaines</option>';
+    for(let w = 1; w <= Math.ceil(total / 7); w++){
+      const opt = document.createElement('option');
+      opt.value = String(w);
+      opt.textContent = `Semaine ${w} (${(w - 1) * 7 + 1}–${Math.min(w * 7, total)})`;
+      salesFilterWeekEl.appendChild(opt);
+    }
+    salesFilterWeekEl.value = [...salesFilterWeekEl.options].some(o => o.value === prev) ? prev : '';
+  }
+
+  function readSalesFilter(){
+    const month = salesFilterMonthEl.value;
+    salesHistoryFilter = month ? `${salesFilterYearEl.value}-${month}` : salesFilterYearEl.value;
+    salesWeekFilter = salesFilterWeekEl.value ? parseInt(salesFilterWeekEl.value, 10) : null;
+  }
+
+  function applySalesFilter(){
+    readSalesFilter();
+    try {
+      localStorage.setItem('nakahy-sales-filter', JSON.stringify({
+        month: salesFilterMonthEl.value, year: salesFilterYearEl.value, week: salesFilterWeekEl.value
+      }));
+    } catch (err) {}
+    renderVentes();
+  }
+
+  salesFilterMonthEl.addEventListener('change', () => { populateSalesWeekSelect(); applySalesFilter(); });
+  salesFilterYearEl.addEventListener('change', () => { populateSalesWeekSelect(); applySalesFilter(); });
+  salesFilterWeekEl.addEventListener('change', applySalesFilter);
+
+  function initSalesFilter(){
+    populateSalesYearSelect();
+    try {
+      const saved = JSON.parse(localStorage.getItem('nakahy-sales-filter') || 'null');
+      if(saved){
+        if(saved.month) salesFilterMonthEl.value = saved.month;
+        if(saved.year && [...salesFilterYearEl.options].some(o => o.value === saved.year)) salesFilterYearEl.value = saved.year;
+        populateSalesWeekSelect();
+        if(saved.week && [...salesFilterWeekEl.options].some(o => o.value === saved.week)) salesFilterWeekEl.value = saved.week;
+      } else {
+        populateSalesWeekSelect();
+      }
+    } catch (err) { populateSalesWeekSelect(); }
+    readSalesFilter();
+  }
+
+  function renderVentes(){
+    const venBagsBody = document.getElementById('venBagsBody');
+    if(!venBagsBody) return;
+
+    // Commandes de la période (date de commande), hors « Annulé » et « Ne répond pas »
+    const periodOrders = orders
+      .filter(o => inPeriod(o.dateCommande, salesHistoryFilter, salesWeekFilter))
+      .filter(countsTowardTotal);
+
+    const bags = [];
+    periodOrders.forEach(o => {
+      (o.produits || []).forEach(p => {
+        bags.push({ date: o.dateCommande || '', sac: p.nom, client: o.nom, prix: Number(p.prix) || 0, statut: o.statut });
+      });
+    });
+    bags.sort((a, b) => b.date.localeCompare(a.date));
+
+    const groups = new Map();
+    periodOrders.forEach(o => {
+      const key = (o.nom || '').trim().toLowerCase();
+      if(!groups.has(key)) groups.set(key, { nom: (o.nom || '').trim(), commandes: 0, sacs: 0, total: 0 });
+      const g = groups.get(key);
+      g.commandes += 1;
+      g.sacs += (o.produits || []).length;
+      g.total += produitsTotal(o);
+    });
+    const clientsList = [...groups.values()].sort((a, b) => b.total - a.total);
+
+    // Tableau des sacs
+    venBagsBody.innerHTML = '';
+    bags.forEach(b => {
+      const meta = badgeMeta[b.statut] || { label: b.statut, cls: '' };
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="sale-date">${formatDate(b.date)}</span></td>
+        <td><span class="sale-bag">${escapeHtml(b.sac)}</span></td>
+        <td><span class="sale-client">${escapeHtml(b.client)}</span></td>
+        <td><span class="badge ${meta.cls}">${meta.label}</span></td>
+        <td class="sale-price">${formatAr(b.prix)}</td>
+      `;
+      venBagsBody.appendChild(tr);
+    });
+    document.getElementById('venBagsEmpty').style.display = bags.length ? 'none' : 'block';
+    document.getElementById('venBagsCount').textContent = String(bags.length);
+
+    // Tableau par client
+    const venClientsBody = document.getElementById('venClientsBody');
+    venClientsBody.innerHTML = '';
+    clientsList.forEach((c, i) => {
+      const rankCls = i < 3 ? ` r${i + 1}` : '';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><div class="client-rank-cell"><span class="rank${rankCls}">${i + 1}</span><span class="sale-bag">${escapeHtml(c.nom)}</span></div></td>
+        <td><span class="sale-num">${c.commandes}</span></td>
+        <td><span class="sale-num">${c.sacs}</span></td>
+        <td class="sale-total">${formatAr(c.total)}</td>
+      `;
+      venClientsBody.appendChild(tr);
+    });
+    document.getElementById('venClientsEmpty').style.display = clientsList.length ? 'none' : 'block';
+    document.getElementById('venClientsCount').textContent = String(clientsList.length);
+
+    // Chiffres
+    const chiffre = bags.reduce((s, b) => s + b.prix, 0);
+    const moyen = bags.length ? Math.round(chiffre / bags.length) : 0;
+    animateNumber(document.getElementById('venSacs'), bags.length, n => String(n));
+    animateNumber(document.getElementById('venClients'), clientsList.length, n => String(n));
+    animateNumber(document.getElementById('venChiffre'), chiffre, n => formatAr(n));
+    animateNumber(document.getElementById('venMoyen'), moyen, n => formatAr(n));
+    animateNumber(document.getElementById('venSumSacs'), bags.length, n => String(n));
+    animateNumber(document.getElementById('venSumClients'), clientsList.length, n => String(n));
+    animateNumber(document.getElementById('venSumChiffre'), chiffre, n => formatAr(n));
+    document.getElementById('venSummaryLabel').textContent =
+      `Total — ${salesHistoryFilter ? filterLabel(salesHistoryFilter, salesWeekFilter) : 'toutes les périodes'}`;
+  }
+
+  initSalesFilter();
 
   document.getElementById('dateCommande').value = todayStr();
   populateYearSelect();
