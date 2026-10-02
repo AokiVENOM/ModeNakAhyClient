@@ -1695,6 +1695,36 @@
     .app-nav-btn svg{width:15px; height:15px;}
     .panel-title{padding:14px 12px 4px;}
   }
+
+  .sales-mode{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;}
+
+  .sale-unit{font-family:'Inter', sans-serif; font-size:12px; color:var(--text-dim); font-weight:500;}
+  .sale-unit-mobile{display:none;}
+  @media (max-width:600px){
+    .sale-unit-mobile{display:inline;}
+    .sales-table td.sale-count-cell{display:inline-block; padding-right:14px;}
+    .sales-table td.sale-total{margin-top:2px;}
+  }
+
+  /* ===== Fenêtre « Déplacer » ===== */
+  .icon-btn.move-btn:hover{color:#FFD27A; border-color:#FFD27A;}
+  html.light .icon-btn.move-btn:hover{color:#B57300; border-color:#B57300;}
+  .move-backdrop{
+    position:fixed; inset:0; z-index:80;
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+    background:rgba(5,15,30,0.5);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  }
+  html.light .move-backdrop{background:rgba(16,48,59,0.25);}
+  .move-dialog{width:100%; max-width:420px; padding:26px 24px 22px;}
+  .move-dialog h3{font-family:'Fraunces', serif; font-size:20px; margin:0 0 4px; color:var(--text);}
+  .move-sub{margin:0 0 18px; color:var(--text-dim); font-size:13.5px;}
+  .move-quick{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;}
+  .move-preview{margin:14px 0 0; font-size:13.5px; color:var(--text-dim); min-height:18px;}
+  .move-preview strong{color:var(--glass-cyan);}
+  .move-dialog .form-footer{margin-top:20px;}
+  .btn-add:disabled{opacity:0.5; cursor:not-allowed;}
 </style>
 </head>
 <body>
@@ -1709,6 +1739,27 @@
   <span id="presenceCount">0</span>
 </div>
 <div class="presence-list" id="presenceList" style="display:none;"></div>
+
+<div class="move-backdrop" id="moveBackdrop" style="display:none;">
+  <div class="glass move-dialog" role="dialog" aria-modal="true" aria-labelledby="moveTitle">
+    <h3 id="moveTitle">Déplacer la commande</h3>
+    <p class="move-sub" id="moveSub"></p>
+    <div class="move-quick">
+      <button type="button" class="status-pill" data-shift="-1">← Mois précédent</button>
+      <button type="button" class="status-pill" data-shift="1">Mois suivant →</button>
+      <button type="button" class="status-pill" data-shift="today">Aujourd'hui</button>
+    </div>
+    <div class="field">
+      <label for="moveDate">Nouvelle date de commande</label>
+      <input type="date" id="moveDate">
+    </div>
+    <p class="move-preview" id="movePreview"></p>
+    <div class="form-footer">
+      <button type="button" class="btn-cancel" id="moveCancelBtn" style="display:inline-block;">Annuler</button>
+      <button type="button" class="btn-add" id="moveConfirmBtn">Déplacer</button>
+    </div>
+  </div>
+</div>
 
 <button type="button" class="theme-toggle-btn" id="themeToggleBtn" aria-label="Changer de thème" title="Mode clair / sombre">
   <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -2120,7 +2171,13 @@
       </div>
     </div>
 
-    <div class="glass table-panel">
+    <div class="sales-mode" id="salesMode">
+      <button type="button" class="status-pill active" data-mode="tout">Tout</button>
+      <button type="button" class="status-pill" data-mode="sacs">👜 Sacs seulement</button>
+      <button type="button" class="status-pill" data-mode="clients">👤 Clients seulement</button>
+    </div>
+
+    <div class="glass table-panel" id="salesBagsPanel">
       <div class="panel-title">
         <span>Sacs écoulés</span>
         <span class="panel-count" id="venBagsCount">0</span>
@@ -2142,7 +2199,7 @@
       <div class="empty" id="venBagsEmpty">Aucun sac écoulé pour cette période.</div>
     </div>
 
-    <div class="glass table-panel">
+    <div class="glass table-panel" id="salesClientsPanel">
       <div class="panel-title">
         <span>Total par client</span>
         <span class="panel-count" id="venClientsCount">0</span>
@@ -2442,6 +2499,7 @@
   let unsubscribeSnapshot = null;
 
   const iconEdit = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
+  const iconMove = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m13 14 3 2-3 2"/><path d="M8 16h8"/></svg>';
   const iconTrash = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>';
 
   const badgeMeta = {
@@ -3118,6 +3176,86 @@
 
   cancelBtn.addEventListener('click', resetForm);
 
+  // ===== Déplacer une commande vers une autre date =====
+  const moveBackdrop = document.getElementById('moveBackdrop');
+  const moveDateInput = document.getElementById('moveDate');
+  const movePreview = document.getElementById('movePreview');
+  const moveConfirmBtn = document.getElementById('moveConfirmBtn');
+  let movingOrderId = null;
+
+  function shiftMonth(dateStr, delta){
+    const base = dateStr || todayStr();
+    let [y, m, d] = base.split('-').map(Number);
+    m += delta;
+    while(m > 12){ m -= 12; y += 1; }
+    while(m < 1){ m += 12; y -= 1; }
+    d = Math.min(d, daysInMonth(y, m));
+    return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  }
+
+  function monthName(dateStr){
+    if(!dateStr) return '—';
+    return filterLabel(dateStr.slice(0, 7));
+  }
+
+  function updateMovePreview(){
+    const o = orders.find(x => x.id === movingOrderId);
+    if(!o) return;
+    const from = o.dateCommande;
+    const to = moveDateInput.value;
+    if(!to){ movePreview.textContent = 'Choisis une date.'; moveConfirmBtn.disabled = true; return; }
+    moveConfirmBtn.disabled = to === from;
+    movePreview.innerHTML = to === from
+      ? 'C\'est déjà la date actuelle.'
+      : `${formatDate(from)} (${monthName(from)}) → <strong>${formatDate(to)} (${monthName(to)})</strong>`;
+  }
+
+  function openMoveDialog(id){
+    const o = orders.find(x => x.id === id);
+    if(!o) return;
+    movingOrderId = id;
+    document.getElementById('moveSub').textContent =
+      `${o.nom} — commandé le ${formatDate(o.dateCommande)}`;
+    moveDateInput.value = shiftMonth(o.dateCommande, 1);
+    updateMovePreview();
+    moveBackdrop.style.display = 'flex';
+  }
+
+  function closeMoveDialog(){
+    moveBackdrop.style.display = 'none';
+    movingOrderId = null;
+  }
+
+  moveDateInput.addEventListener('input', updateMovePreview);
+  document.querySelectorAll('#moveBackdrop .move-quick .status-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const o = orders.find(x => x.id === movingOrderId);
+      if(!o) return;
+      moveDateInput.value = btn.dataset.shift === 'today'
+        ? todayStr()
+        : shiftMonth(moveDateInput.value || o.dateCommande, parseInt(btn.dataset.shift, 10));
+      updateMovePreview();
+    });
+  });
+  document.getElementById('moveCancelBtn').addEventListener('click', closeMoveDialog);
+  moveBackdrop.addEventListener('click', (e) => { if(e.target === moveBackdrop) closeMoveDialog(); });
+  document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && movingOrderId) closeMoveDialog(); });
+
+  moveConfirmBtn.addEventListener('click', async () => {
+    const id = movingOrderId;
+    const newDate = moveDateInput.value;
+    if(!id || !newDate) return;
+    moveConfirmBtn.disabled = true;
+    try {
+      await updateDoc(doc(db, 'commandes', id), { dateCommande: newDate });
+      closeMoveDialog();
+    } catch (err) {
+      console.error(err);
+      alert('Impossible de déplacer la commande — vérifie la connexion.');
+      moveConfirmBtn.disabled = false;
+    }
+  });
+
   document.querySelectorAll('#descTags .desc-tag').forEach(tag => {
     tag.addEventListener('click', () => {
       const ta = document.getElementById('description');
@@ -3511,10 +3649,15 @@
             <div class="payment-pill">${paiementLabels[o.modePaiement] || ''}</div>
           </td>
           <td class="actions">
+            <button class="icon-btn move-btn" data-action="move" title="Déplacer vers une autre date" aria-label="Déplacer vers une autre date">${iconMove}</button>
             <button class="icon-btn edit-btn" data-action="edit" title="Modifier" aria-label="Modifier">${iconEdit}</button>
             <button class="icon-btn del-btn" data-action="del" title="Supprimer" aria-label="Supprimer">${iconTrash}</button>
           </td>
         `;
+        tr.querySelector('[data-action="move"]').addEventListener('click', (e) => {
+          e.stopPropagation();
+          openMoveDialog(o.id);
+        });
         tr.querySelector('[data-action="edit"]').addEventListener('click', (e) => {
           e.stopPropagation();
           editOrder(o.id);
@@ -4050,7 +4193,7 @@
       tr.innerHTML = `
         <td><span class="sale-date">${formatDate(b.date)}</span></td>
         <td><span class="sale-bag">${escapeHtml(b.sac)}</span></td>
-        <td><span class="sale-client">${escapeHtml(b.client)}</span></td>
+        <td><span class="sale-unit sale-unit-mobile">Client :</span> <span class="sale-client">${escapeHtml(b.client)}</span></td>
         <td><span class="badge ${meta.cls}">${meta.label}</span></td>
         <td class="sale-price">${formatAr(b.prix)}</td>
       `;
@@ -4067,9 +4210,9 @@
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><div class="client-rank-cell"><span class="rank${rankCls}">${i + 1}</span><span class="sale-bag">${escapeHtml(c.nom)}</span></div></td>
-        <td><span class="sale-num">${c.commandes}</span></td>
-        <td><span class="sale-num">${c.sacs}</span></td>
-        <td class="sale-total">${formatAr(c.total)}</td>
+        <td class="sale-count-cell"><span class="sale-num">${c.commandes}</span> <span class="sale-unit">${c.commandes > 1 ? 'commandes' : 'commande'}</span></td>
+        <td class="sale-count-cell"><span class="sale-num">${c.sacs}</span> <span class="sale-unit">${c.sacs > 1 ? 'sacs' : 'sac'}</span></td>
+        <td class="sale-total"><span class="sale-unit sale-unit-mobile">Total :</span> ${formatAr(c.total)}</td>
       `;
       venClientsBody.appendChild(tr);
     });
@@ -4091,6 +4234,20 @@
   }
 
   initSalesFilter();
+
+  function applySalesMode(mode){
+    if(!['tout','sacs','clients'].includes(mode)) mode = 'tout';
+    document.getElementById('salesBagsPanel').style.display = mode === 'clients' ? 'none' : '';
+    document.getElementById('salesClientsPanel').style.display = mode === 'sacs' ? 'none' : '';
+    document.querySelectorAll('#salesMode .status-pill').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+    try { localStorage.setItem('nakahy-sales-mode', mode); } catch (err) {}
+  }
+  document.querySelectorAll('#salesMode .status-pill').forEach(btn => {
+    btn.addEventListener('click', () => applySalesMode(btn.dataset.mode));
+  });
+  try { applySalesMode(localStorage.getItem('nakahy-sales-mode') || 'tout'); } catch (err) { applySalesMode('tout'); }
 
   document.getElementById('dateCommande').value = todayStr();
   populateYearSelect();
