@@ -655,13 +655,22 @@
     padding:20px 16px;
     text-align:center;
     border-radius:32px 32px 26px 26px / 40px 40px 20px 20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    min-height:112px;
   }
   .stat .num{
     font-family:'Fraunces', serif;
-    font-size:clamp(22px,4vw,34px);
+    font-size:clamp(20px,2.8vw,32px);
     font-weight:700;
     color:var(--glass-cyan);
     display:block;
+    white-space:nowrap;
+    line-height:1.1;
+    max-width:100%;
   }
   .stat.coral .num{color:var(--glass-coral);}
   .stat .label{
@@ -1704,7 +1713,232 @@
     .sale-unit-mobile{display:inline;}
     .sales-table td.sale-count-cell{display:inline-block; padding-right:14px;}
     .sales-table td.sale-total{margin-top:2px;}
+
+    /* Safari iOS n'affiche plus les très longs panneaux avec flou (backdrop-filter) :
+       on remplace le flou par un fond verre opaque dans l'onglet Ventes. */
+    #ventesView .table-panel{
+      backdrop-filter:none;
+      -webkit-backdrop-filter:none;
+      background:linear-gradient(160deg, rgba(28,62,88,0.92), rgba(14,36,58,0.9));
+    }
+    html.light #ventesView .table-panel{
+      background:linear-gradient(160deg, rgba(255,255,255,0.94), rgba(244,250,252,0.9));
+    }
+
+    /* Liste des sacs plus compacte : sac + prix / client + statut / date */
+    #venBagsBody tr{
+      display:grid;
+      grid-template-columns:1fr auto;
+      grid-template-areas:"sac prix" "client statut" "date date";
+      align-items:center;
+      gap:4px 10px;
+      padding:12px 10px;
+    }
+    #venBagsBody td{padding:0;}
+    #venBagsBody td:nth-child(1){grid-area:date;}
+    #venBagsBody td:nth-child(2){grid-area:sac;}
+    #venBagsBody td:nth-child(3){grid-area:client;}
+    #venBagsBody td:nth-child(4){grid-area:statut; justify-self:end;}
+    #venBagsBody td:nth-child(5){grid-area:prix; justify-self:end;}
+    #venBagsBody .sale-date{font-size:12px;}
   }
+
+  /* ===== Navbar flottante « pop-up » liquid glass, collante en haut ===== */
+  .app-nav.glass{
+    position:sticky;
+    top:max(12px, env(safe-area-inset-top));
+    z-index:60;
+    padding:6px;
+    overflow:visible;
+    isolation:isolate;
+    background:
+      radial-gradient(140% 120% at 50% -30%, rgba(255,255,255,0.14), transparent 50%),
+      linear-gradient(160deg, rgba(255,255,255,0.04), rgba(255,255,255,0) 50%, rgba(255,255,255,0.03));
+    border:1px solid rgba(255,255,255,0.35);
+    backdrop-filter:saturate(140%);
+    -webkit-backdrop-filter:saturate(140%);
+    box-shadow:
+      0 18px 50px rgba(0,0,0,0.38),
+      0 4px 14px rgba(0,0,0,0.22),
+      inset 0 1.5px 0 rgba(255,255,255,0.55),
+      inset 0 -1.5px 0 rgba(255,255,255,0.10),
+      inset 0 0 22px rgba(255,255,255,0.06);
+    animation:navPop 0.6s cubic-bezier(.3,1.5,.5,1) backwards;
+    transition:transform 0.4s cubic-bezier(.3,1.4,.5,1), box-shadow 0.4s ease, background 0.4s ease;
+  }
+  /* reflet spéculaire sur le bord haut */
+  .app-nav.glass::after{
+    content:"";
+    position:absolute;
+    left:14%; right:14%; top:1px; height:40%;
+    border-radius:999px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.28), transparent);
+    pointer-events:none;
+    z-index:0;
+    opacity:0.7;
+  }
+  .app-nav.glass:hover{transform:none;}
+  /* quand la barre « décolle » au scroll : elle flotte davantage */
+  .app-nav.glass.is-stuck{
+    transform:scale(0.97);
+    box-shadow:
+      0 24px 60px rgba(0,0,0,0.5),
+      0 6px 18px rgba(0,0,0,0.28),
+      inset 0 1.5px 0 rgba(255,255,255,0.6),
+      inset 0 -1.5px 0 rgba(255,255,255,0.12),
+      inset 0 0 24px rgba(255,255,255,0.08);
+  }
+  .app-nav.glass.is-stuck{
+    background:
+      radial-gradient(140% 120% at 50% -30%, rgba(255,255,255,0.14), transparent 50%),
+      linear-gradient(160deg, rgba(20,50,75,0.10), rgba(10,30,50,0.08));
+  }
+  html.light .app-nav.glass.is-stuck{
+    background:
+      radial-gradient(140% 120% at 50% -30%, rgba(255,255,255,0.45), transparent 50%),
+      linear-gradient(160deg, rgba(255,255,255,0.22), rgba(255,255,255,0.10));
+  }
+  .presence-badge{transition:opacity 0.3s ease, transform 0.3s ease, background 0.2s, border-color 0.2s;}
+  @media (max-width:600px){
+    body.nav-stuck .presence-badge{opacity:0; transform:translateY(-8px); pointer-events:none;}
+  }
+  .app-nav-indicator{
+    top:6px; bottom:6px; left:6px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0) 55%),
+      linear-gradient(135deg, rgba(79,216,224,0.78), rgba(47,169,176,0.7));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.7),
+      inset 0 -2px 6px rgba(0,60,70,0.25),
+      0 6px 20px rgba(79,216,224,0.45);
+  }
+  .app-nav-indicator{width:calc((100% - 12px) / 3);}
+  .app-nav.single .app-nav-indicator{width:calc(100% - 12px);}
+  .app-nav-btn{transition:color 0.3s ease, transform 0.35s cubic-bezier(.3,1.6,.5,1);}
+  .app-nav-btn:active{transform:scale(0.92);}
+  .app-nav-btn.active svg{animation:navIconPop 0.45s cubic-bezier(.3,1.8,.5,1);}
+  @keyframes navPop{
+    0%{opacity:0; transform:translateY(-14px) scale(0.85);}
+    100%{opacity:1; transform:none;}
+  }
+  @keyframes navIconPop{
+    0%{transform:scale(0.6);}
+    100%{transform:scale(1);}
+  }
+  html.light .app-nav.glass{
+    background:
+      radial-gradient(140% 120% at 50% -30%, rgba(255,255,255,0.45), transparent 50%),
+      linear-gradient(160deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+    border-color:rgba(255,255,255,0.9);
+    box-shadow:
+      0 16px 40px rgba(14,42,54,0.16),
+      0 3px 10px rgba(14,42,54,0.08),
+      inset 0 1.5px 0 rgba(255,255,255,1),
+      inset 0 -1px 0 rgba(14,42,54,0.06);
+  }
+  @media (prefers-reduced-motion: reduce){
+    .app-nav.glass, .app-nav-btn.active svg{animation:none;}
+  }
+
+  /* ===== Liquid glass moderne et simple : verre clair, sans flou, sans brillance ===== */
+  .app-nav.glass,
+  .app-nav.glass.is-stuck{
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.18);
+    box-shadow:
+      0 8px 24px rgba(0,0,0,0.22),
+      inset 0 1px 0 rgba(255,255,255,0.22),
+      inset 0 -1px 0 rgba(255,255,255,0.06);
+  }
+  .app-nav.glass.is-stuck{
+    background:rgba(18,40,60,0.12);
+    box-shadow:
+      0 10px 30px rgba(0,0,0,0.3),
+      inset 0 1px 0 rgba(255,255,255,0.24),
+      inset 0 -1px 0 rgba(255,255,255,0.06);
+  }
+  .app-nav.glass::before{display:none;}
+  /* Reflet de verre : léger halo en haut + bande de lumière en diagonale */
+  .app-nav.glass::after{
+    display:block;
+    content:"";
+    position:absolute;
+    top:0; right:0; bottom:0; left:0;
+    width:auto; height:auto;
+    padding:0;
+    -webkit-mask:none;
+    mask:none;
+    border-radius:inherit;
+    pointer-events:none;
+    z-index:0;
+    opacity:1;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0) 50%),
+      linear-gradient(105deg, transparent 14%, rgba(255,255,255,0.16) 24%, rgba(255,255,255,0.05) 31%, transparent 38%,
+                      transparent 60%, rgba(255,255,255,0.09) 65%, transparent 70%);
+    background-size:100% 100%, 220% 100%;
+    background-position:0 0, 0% 0;
+    animation:navReflect 9s ease-in-out infinite;
+  }
+  /* la lumière glisse lentement sur le verre */
+  @keyframes navReflect{
+    0%, 100%{background-position:0 0, 0% 0;}
+    50%{background-position:0 0, 100% 0;}
+  }
+  html.light .app-nav.glass::after{
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 45%),
+      linear-gradient(105deg, transparent 18%, rgba(255,255,255,0.45) 26%, rgba(255,255,255,0.12) 31%, transparent 36%,
+                      transparent 62%, rgba(255,255,255,0.3) 66%, transparent 70%);
+    background-size:100% 100%, 220% 100%;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .app-nav.glass::after{animation:none;}
+  }
+  .app-nav-indicator{
+    background:rgba(79,216,224,0.28);
+    border:1px solid rgba(79,216,224,0.45);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .app-nav-btn{color:rgba(255,255,255,0.78); text-shadow:0 1px 2px rgba(0,0,0,0.4);}
+  .app-nav-btn svg{filter:none;}
+  .app-nav-btn.active{color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.35);}
+  .app-nav-btn.active svg{filter:none;}
+  html.light .app-nav.glass,
+  html.light .app-nav.glass.is-stuck{
+    background:rgba(255,255,255,0.35);
+    border-color:rgba(255,255,255,0.7);
+    box-shadow:0 8px 24px rgba(14,42,54,0.12), inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+  html.light .app-nav-indicator{
+    background:rgba(47,169,176,0.22);
+    border-color:rgba(47,169,176,0.45);
+  }
+  html.light .app-nav-btn{color:#2a4a56; text-shadow:none;}
+  html.light .app-nav-btn.active{color:#0b4d55; text-shadow:none;}
+
+  /* ===== Bande floue derrière la navbar (seulement le contenu qui défile, pas la navbar) ===== */
+  .top-blur{
+    position:fixed;
+    top:0; left:0; right:0;
+    height:calc(max(12px, env(safe-area-inset-top)) + 72px);
+    z-index:55;
+    pointer-events:none;
+    backdrop-filter:blur(4px);
+    -webkit-backdrop-filter:blur(4px);
+    background:linear-gradient(180deg, rgba(10,25,40,0.12), rgba(10,25,40,0));
+    -webkit-mask-image:linear-gradient(180deg, #000 60%, transparent);
+    mask-image:linear-gradient(180deg, #000 60%, transparent);
+    opacity:0;
+    transition:opacity 0.3s ease;
+  }
+  body.nav-stuck .top-blur{opacity:1;}
+  html.light .top-blur{background:linear-gradient(180deg, rgba(255,255,255,0.15), rgba(255,255,255,0));}
+
+  /* Bouton facture */
+  .icon-btn.invoice-btn:hover{color:#7FE3A5; border-color:#7FE3A5;}
+  html.light .icon-btn.invoice-btn:hover{color:#1F8A4C; border-color:#1F8A4C;}
+  body.livreur-theme .icon-btn.invoice-btn{display:none;}
 
   /* ===== Fenêtre « Déplacer » ===== */
   .icon-btn.move-btn:hover{color:#FFD27A; border-color:#FFD27A;}
@@ -1881,6 +2115,7 @@
     <div id="pendingRequestsList"></div>
   </div>
 
+  <div class="top-blur" aria-hidden="true"></div>
   <nav class="app-nav glass" id="appNav" aria-label="Navigation principale">
     <span class="app-nav-indicator" id="appNavIndicator"></span>
     <button type="button" class="app-nav-btn active" data-view="clients">
@@ -2499,6 +2734,7 @@
   let unsubscribeSnapshot = null;
 
   const iconEdit = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
+  const iconInvoice = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/><path d="M9 13h7M9 17h5"/></svg>';
   const iconMove = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m13 14 3 2-3 2"/><path d="M8 16h8"/></svg>';
   const iconTrash = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>';
 
@@ -3566,6 +3802,128 @@
     docPdf.save(exportFileName('pdf'));
   }
 
+  // ===== Facture client (PDF) =====
+  function invoiceNumber(o){
+    const d = (o.dateCommande || todayStr()).replace(/-/g, '');
+    const suffix = String(o.id || '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || '0000';
+    return `FAC-${d}-${suffix}`;
+  }
+
+  function generateInvoice(o){
+    if(!window.jspdf){ alert("La librairie PDF n'a pas pu se charger. Vérifiez votre connexion internet."); return; }
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+    const W = pdf.internal.pageSize.getWidth();
+    const H = pdf.internal.pageSize.getHeight();
+    const num = invoiceNumber(o);
+    const navy = [18, 59, 79];
+
+    // En-tête
+    pdf.setFillColor(...navy);
+    pdf.rect(0, 0, W, 38, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(20);
+    pdf.text("Mode Nak'Ahy", 14, 22);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(22);
+    pdf.text('FACTURE', W - 14, 19, { align: 'right' });
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9.5);
+    pdf.text(`N° ${num}`, W - 14, 27, { align: 'right' });
+
+    // Infos facture + client
+    let y = 52;
+    pdf.setTextColor(130);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('FACTURÉ À', 14, y);
+    pdf.text('DÉTAILS', W / 2 + 6, y);
+
+    pdf.setTextColor(35, 35, 40);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(12);
+    pdf.text(o.nom || '—', 14, y + 8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9.5);
+    let cy = y + 15;
+    if(o.tel){ pdf.text(`Tél : ${o.tel}`, 14, cy); cy += 6; }
+    if(o.lieu){
+      const lines = pdf.splitTextToSize(`Livraison : ${o.lieu}`, W / 2 - 24);
+      pdf.text(lines, 14, cy); cy += lines.length * 5 + 1;
+    }
+
+    const details = [
+      ['Date de facture', new Date().toLocaleDateString('fr-FR')],
+      ['Date de commande', formatDate(o.dateCommande) || '—'],
+      ['Paiement', paiementLabels[o.modePaiement] || '—'],
+      ['Statut', badgeMeta[o.statut]?.label || o.statut || '—']
+    ];
+    let dy = y + 8;
+    details.forEach(([k, v]) => {
+      pdf.setTextColor(120);
+      pdf.text(k, W / 2 + 6, dy);
+      pdf.setTextColor(35, 35, 40);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(String(v), W - 14, dy, { align: 'right' });
+      pdf.setFont('helvetica', 'normal');
+      dy += 6.5;
+    });
+
+    // Tableau des produits
+    const startY = Math.max(cy, dy) + 8;
+    const body = (o.produits || []).map((p, i) => [String(i + 1), p.nom || '—', '1', formatArPdf(Number(p.prix) || 0)]);
+    pdf.autoTable({
+      startY,
+      margin: { left: 14, right: 14 },
+      head: [['#', 'Désignation', 'Qté', 'Prix']],
+      body,
+      styles: { fontSize: 9.5, cellPadding: 4, textColor: [45, 45, 50], lineColor: [228, 232, 233], lineWidth: 0.25 },
+      headStyles: { fillColor: navy, textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [244, 248, 249] },
+      columnStyles: {
+        0: { cellWidth: 12, halign: 'center' },
+        2: { cellWidth: 18, halign: 'center' },
+        3: { cellWidth: 40, halign: 'right', fontStyle: 'bold' }
+      }
+    });
+
+    // Totaux
+    const sousTotal = produitsTotal(o);
+    const frais = o.fraisLivraison ? (Number(o.fraisMontant) || 0) : 0;
+    const total = sousTotal + frais;
+    let ty = (pdf.lastAutoTable ? pdf.lastAutoTable.finalY : startY) + 8;
+    if(ty + 50 > H){ pdf.addPage(); ty = 20; }
+    const bx = W - 14 - 84;
+    pdf.setFontSize(9.5);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(110);
+    pdf.text('Sous-total', bx, ty + 4);
+    pdf.text('Frais de livraison', bx, ty + 11);
+    pdf.setTextColor(35, 35, 40);
+    pdf.text(formatArPdf(sousTotal), W - 14, ty + 4, { align: 'right' });
+    pdf.text(frais ? formatArPdf(frais) : 'Gratuite', W - 14, ty + 11, { align: 'right' });
+    pdf.setFillColor(...navy);
+    pdf.roundedRect(bx - 4, ty + 16, 88, 13, 2, 2, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.text('TOTAL', bx, ty + 24.5);
+    pdf.text(formatArPdf(total), W - 16, ty + 24.5, { align: 'right' });
+
+    // Pied de page
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
+    pdf.setTextColor(...navy);
+    pdf.text('Merci pour votre confiance !', W / 2, H - 22, { align: 'center' });
+    pdf.setFontSize(8);
+    pdf.setTextColor(150);
+    pdf.text(`Mode Nak'Ahy  ·  Facture ${num}`, W / 2, H - 14, { align: 'center' });
+
+    const safeName = (o.nom || 'client').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase();
+    pdf.save(`facture-${safeName}-${num}.pdf`);
+  }
+
   function exportExcel(){
     if(!window.XLSX){ alert("La librairie Excel n'a pas pu se charger. Vérifiez votre connexion internet."); return; }
     const list = getFilteredOrders();
@@ -3649,11 +4007,16 @@
             <div class="payment-pill">${paiementLabels[o.modePaiement] || ''}</div>
           </td>
           <td class="actions">
+            <button class="icon-btn invoice-btn" data-action="invoice" title="Facture PDF" aria-label="Télécharger la facture">${iconInvoice}</button>
             <button class="icon-btn move-btn" data-action="move" title="Déplacer vers une autre date" aria-label="Déplacer vers une autre date">${iconMove}</button>
             <button class="icon-btn edit-btn" data-action="edit" title="Modifier" aria-label="Modifier">${iconEdit}</button>
             <button class="icon-btn del-btn" data-action="del" title="Supprimer" aria-label="Supprimer">${iconTrash}</button>
           </td>
         `;
+        tr.querySelector('[data-action="invoice"]').addEventListener('click', (e) => {
+          e.stopPropagation();
+          generateInvoice(o);
+        });
         tr.querySelector('[data-action="move"]').addEventListener('click', (e) => {
           e.stopPropagation();
           openMoveDialog(o.id);
@@ -3796,6 +4159,16 @@
   appNav.querySelectorAll('.app-nav-btn').forEach(btn => {
     btn.addEventListener('click', () => switchView(btn.dataset.view));
   });
+
+  // Navbar flottante : effet « décollé » quand elle colle en haut pendant le scroll
+  function updateNavStuck(){
+    const top = parseFloat(getComputedStyle(appNav).top) || 12;
+    const stuck = window.scrollY > 4 && appNav.getBoundingClientRect().top <= top + 1;
+    appNav.classList.toggle('is-stuck', stuck);
+    document.body.classList.toggle('nav-stuck', stuck && appNav.offsetParent !== null);
+  }
+  window.addEventListener('scroll', updateNavStuck, { passive:true });
+  window.addEventListener('resize', updateNavStuck);
 
   function startExpensesListening(){
     if(unsubscribeExpenses || !db) return;
