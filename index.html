@@ -1259,6 +1259,17 @@
     white-space:nowrap;
   }
 
+  .product-chip.product-chip-total{
+    margin-top:4px;
+    padding-top:6px;
+    border-top:1px dashed rgba(127,227,165,0.35);
+    color:#7FE3A5;
+    font-weight:600;
+  }
+  .product-chip.product-chip-total span:last-child{color:#7FE3A5; font-weight:700;}
+  html.light .product-chip.product-chip-total{color:#1F8A4C; border-top-color:rgba(31,138,76,0.35);}
+  html.light .product-chip.product-chip-total span:last-child{color:#1F8A4C;}
+
   .payment-pill{
     display:inline-block;
     margin-top:7px;
@@ -3985,6 +3996,9 @@
         const chips = o.produits.map(p =>
           `<div class="product-chip"><span>${escapeHtml(p.nom)}</span><span>${formatAr(p.prix)}</span></div>`
         ).join('');
+        const chipsTotal = o.produits.length > 1
+          ? `<div class="product-chip product-chip-total"><span>Total sacs (${o.produits.length})</span><span>${formatAr(produitsTotal(o))}</span></div>`
+          : '';
         const clientCount = nameCounts[o.nom.trim().toLowerCase()] || 1;
         const repeatBadge = clientCount > 1
           ? `<div class="repeat-badge">↻ ${clientCount} commandes</div>`
@@ -4000,7 +4014,7 @@
               </div>
             </div>
           </td>
-          <td>${chips}</td>
+          <td>${chips}${chipsTotal}</td>
           <td class="total">${formatAr(orderGrandTotal(o))}</td>
           <td>
             <span class="badge ${meta.cls}">${meta.label}</span>
