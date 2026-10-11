@@ -23,7 +23,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mode Nak'Ahy">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Répartition des clients — Mode Nak'Ahy</title>
+<title>APERÇU — Mode Nak'Ahy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -2005,6 +2005,40 @@
   html.perf-lite.light .top-blur{background:linear-gradient(180deg, rgba(233,242,245,0.8), rgba(233,242,245,0));}
   html.perf-lite .app-nav.glass.is-stuck{background:rgba(16,38,58,0.82);}
   html.perf-lite.light .app-nav.glass.is-stuck{background:rgba(255,255,255,0.92);}
+
+  /* ===== APERÇU : verre plus discret + fond dégradé sombre ===== */
+  html:not(.light) body:not(.livreur-theme){
+    background-color:#060B16 !important;
+    background-image:
+      radial-gradient(70% 55% at 10% 0%, rgba(79,216,224,0.14), transparent 60%),
+      radial-gradient(55% 45% at 95% 15%, rgba(255,140,107,0.08), transparent 60%),
+      radial-gradient(60% 50% at 60% 100%, rgba(40,90,140,0.22), transparent 65%),
+      linear-gradient(165deg, #060B16 0%, #0A1626 45%, #0D2232 100%) !important;
+    background-attachment:fixed;
+  }
+  html:not(.light) .blob{opacity:0.16;}
+  html:not(.light) .blob2, html:not(.light) .blob4{opacity:0.08;}
+
+  /* Bordures des cartes réduites */
+  html:not(.light) .glass{
+    border:1px solid rgba(255,255,255,0.07) !important;
+    background:linear-gradient(160deg, rgba(255,255,255,0.065), rgba(255,255,255,0.025)) !important;
+    box-shadow:
+      0 10px 30px rgba(0,0,0,0.35),
+      inset 0 1px 0 rgba(255,255,255,0.10) !important;
+  }
+  html:not(.light) .glass::after{opacity:0.22 !important; padding:0.5px !important;}
+  html:not(.light) .glass:hover{box-shadow:0 12px 34px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12) !important;}
+  html:not(.light) .stat{border-radius:24px;}
+
+  /* Navbar et petits éléments assortis */
+  html:not(.light) .app-nav.glass{border-color:rgba(255,255,255,0.10) !important;}
+  html:not(.light) .export-btn, html:not(.light) .btn-cancel, html:not(.light) .icon-btn, html:not(.light) .status-pill{border-color:rgba(255,255,255,0.10) !important;}
+  html:not(.light) input, html:not(.light) select, html:not(.light) textarea{border-color:rgba(255,255,255,0.08) !important; background:rgba(0,0,0,0.22) !important;}
+  html:not(.light) .theme-color-fix{}
+
+  /* Mode léger (téléphones) : même fond, cartes un peu plus pleines */
+  html.perf-lite:not(.light) .glass{background:linear-gradient(160deg, rgba(22,40,58,0.85), rgba(14,28,44,0.85)) !important;}
 </style>
 </head>
 <body>
