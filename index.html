@@ -6,6 +6,13 @@
 <meta name="theme-color" content="#0B1D3A" id="themeColorMeta">
 <script>
   try { if(localStorage.getItem('nakahy-theme') === 'light') document.documentElement.classList.add('light'); } catch (e) {}
+  // Mode « léger » : téléphones et appareils peu puissants → moins d'animations et de flou
+  try {
+    var mm = window.matchMedia;
+    var lite = (mm && (mm('(pointer: coarse)').matches || mm('(max-width: 900px)').matches || mm('(prefers-reduced-motion: reduce)').matches))
+      || (navigator.deviceMemory && navigator.deviceMemory <= 4);
+    if(lite) document.documentElement.classList.add('perf-lite');
+  } catch (e) {}
 </script>
 
 <!-- Installation en app (PWA) -->
@@ -1970,6 +1977,34 @@
   .move-preview strong{color:var(--glass-cyan);}
   .move-dialog .form-footer{margin-top:20px;}
   .btn-add:disabled{opacity:0.5; cursor:not-allowed;}
+
+  /* ===== Mode léger (téléphones / appareils peu puissants) ===== */
+  html.perf-lite .blob{animation:none !important; filter:blur(50px);}
+  html.perf-lite .blob3, html.perf-lite .blob4{display:none;}
+  html.perf-lite *, html.perf-lite *::before, html.perf-lite *::after{
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+  html.perf-lite .glass{
+    background:linear-gradient(160deg, rgba(40,75,100,0.55), rgba(20,45,70,0.5));
+    transition:none;
+  }
+  html.perf-lite.light .glass{background:linear-gradient(160deg, rgba(255,255,255,0.9), rgba(255,255,255,0.78));}
+  html.perf-lite .glass::before{display:none;}
+  html.perf-lite .glass:hover, html.perf-lite .stat:hover{transform:none;}
+  html.perf-lite header h1, html.perf-lite .auth-brand h1,
+  html.perf-lite .presence-dot, html.perf-lite .presence-badge *,
+  html.perf-lite .app-nav.glass, html.perf-lite .app-nav.glass::after, html.perf-lite .app-nav-btn.active svg,
+  html.perf-lite .stat .num.bump, html.perf-lite .view-enter,
+  html.perf-lite .exp-row-new, html.perf-lite .exp-row-new td,
+  html.perf-lite .detail-box, html.perf-lite .glass, html.perf-lite tbody tr{animation:none !important;}
+  html.perf-lite .reveal{opacity:1 !important; transform:none !important; transition:none !important;}
+  html.perf-lite .app-nav.glass, html.perf-lite .app-nav.glass.is-stuck{transform:none; transition:none;}
+  html.perf-lite .app-nav-indicator{transition:transform 0.25s ease;}
+  html.perf-lite .top-blur{background:linear-gradient(180deg, rgba(10,25,40,0.55), rgba(10,25,40,0)); transition:none;}
+  html.perf-lite.light .top-blur{background:linear-gradient(180deg, rgba(233,242,245,0.8), rgba(233,242,245,0));}
+  html.perf-lite .app-nav.glass.is-stuck{background:rgba(16,38,58,0.82);}
+  html.perf-lite.light .app-nav.glass.is-stuck{background:rgba(255,255,255,0.92);}
 </style>
 </head>
 <body>
@@ -4175,14 +4210,23 @@
   });
 
   // Navbar flottante : effet « décollé » quand elle colle en haut pendant le scroll
+  let navStuckState = null, navTicking = false, navTopCache = null;
   function updateNavStuck(){
-    const top = parseFloat(getComputedStyle(appNav).top) || 12;
-    const stuck = window.scrollY > 4 && appNav.getBoundingClientRect().top <= top + 1;
+    navTicking = false;
+    if(navTopCache === null) navTopCache = parseFloat(getComputedStyle(appNav).top) || 12;
+    const stuck = window.scrollY > 4 && appNav.getBoundingClientRect().top <= navTopCache + 1;
+    if(stuck === navStuckState) return;
+    navStuckState = stuck;
     appNav.classList.toggle('is-stuck', stuck);
     document.body.classList.toggle('nav-stuck', stuck && appNav.offsetParent !== null);
   }
-  window.addEventListener('scroll', updateNavStuck, { passive:true });
-  window.addEventListener('resize', updateNavStuck);
+  function onNavScroll(){
+    if(navTicking) return;
+    navTicking = true;
+    requestAnimationFrame(updateNavStuck);
+  }
+  window.addEventListener('scroll', onNavScroll, { passive:true });
+  window.addEventListener('resize', () => { navTopCache = null; navStuckState = null; onNavScroll(); });
 
   function startExpensesListening(){
     if(unsubscribeExpenses || !db) return;
@@ -4684,7 +4728,7 @@
     const from = typeof el._val === 'number' ? el._val : 0;
     el._val = to;
     if(from === to){ el.textContent = format(to); return; }
-    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = document.documentElement.classList.contains('perf-lite') || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     if(reduce){ el.textContent = format(to); return; }
     const duration = 900;
     const start = performance.now();
@@ -4706,7 +4750,7 @@
   // Apparition des panneaux au défilement
   (function scrollReveal(){
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if(reduce || !('IntersectionObserver' in window)) return;
+    if(reduce || document.documentElement.classList.contains('perf-lite') || !('IntersectionObserver' in window)) return;
     const els = document.querySelectorAll('#appView .glass:not(input), .account-actions');
     const io = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
