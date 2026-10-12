@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0B1D3A" id="themeColorMeta">
+<meta name="theme-color" content="#050A14" id="themeColorMeta">
 <script>
   try { if(localStorage.getItem('nakahy-theme') === 'light') document.documentElement.classList.add('light'); } catch (e) {}
   // Mode « léger » : téléphones et appareils peu puissants → moins d'animations et de flou
@@ -31,7 +31,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
-    --bg-a:#0B1D3A;
+    --bg-a:#050A14;
     --bg-b:#123B4F;
     --glass-cyan:#4FD8E0;
     --glass-coral:#FF8C6B;
@@ -46,13 +46,13 @@
 
   html{-webkit-text-size-adjust:100%;}
 
-  html{background-color:#0B1D3A;}
+  html{background-color:#050A14;}
   body{
     margin:0;
     min-height:100vh;
     font-family:'Inter', sans-serif;
     color:var(--text);
-    background-color:#0B1D3A;
+    background-color:#050A14;
     background-image:
       radial-gradient(circle at 15% 20%, rgba(79,216,224,0.25), transparent 40%),
       radial-gradient(circle at 85% 10%, rgba(255,140,107,0.18), transparent 45%),
@@ -2026,6 +2026,32 @@
   .badge.return-reason{color:#FFB0B0; background:rgba(255,128,128,0.10); border:1px solid rgba(255,128,128,0.35); text-decoration:none;}
   html.light .badge.return-reason{color:#C0392B;}
   .return-count{color:#FF9C9C !important; background:rgba(255,128,128,0.12) !important; border-color:rgba(255,128,128,0.35) !important;}
+
+
+  /* ===== Fond plus sombre en mode sombre ===== */
+  html:not(.light) body:not(.livreur-theme){
+    background-color:#050A14;
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(79,216,224,0.12), transparent 42%),
+      radial-gradient(circle at 85% 10%, rgba(255,140,107,0.07), transparent 45%),
+      radial-gradient(circle at 70% 85%, rgba(79,216,224,0.07), transparent 42%),
+      linear-gradient(160deg, #050A14 0%, #081624 55%, #0A1C28 100%);
+    background-attachment:fixed;
+  }
+  html:not(.light) .blob{opacity:0.22;}
+  html:not(.light) .blob4{opacity:0.14;}
+
+
+  /* ===== Bordures des cartes plus fines ===== */
+  html:not(.light) .glass{
+    border:1px solid rgba(255,255,255,0.08);
+    box-shadow:
+      0 10px 30px rgba(0,0,0,0.35),
+      inset 0 1px 0 rgba(255,255,255,0.10);
+  }
+  html:not(.light) .glass:hover{box-shadow:0 12px 34px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);}
+  .glass::after{opacity:0.25; padding:0.5px;}
+  html.light .glass::after{opacity:0.5;}
 
   /* ===== Mode léger (téléphones / appareils peu puissants) ===== */
   html.perf-lite .blob{animation:none !important; filter:blur(50px);}
@@ -4079,7 +4105,10 @@
 
     // Tableau des produits
     const startY = Math.max(cy, dy) + 8;
-    const body = activeProduits(o).map((p, i) => [String(i + 1), p.nom || '—', '1', formatArPdf(Number(p.prix) || 0)]);
+    const allProds = o.produits || [];
+    const body = allProds.map((p, i) => p.annule
+      ? [String(i + 1), `${p.nom || '—'}  (non pris à la livraison)`, '0', `${formatArPdf(Number(p.prix) || 0)}`]
+      : [String(i + 1), p.nom || '—', '1', formatArPdf(Number(p.prix) || 0)]);
     pdf.autoTable({
       startY,
       margin: { left: 14, right: 14 },
@@ -4092,6 +4121,24 @@
         0: { cellWidth: 12, halign: 'center' },
         2: { cellWidth: 18, halign: 'center' },
         3: { cellWidth: 40, halign: 'right', fontStyle: 'bold' }
+      },
+      // Sac non pris : grisé, en italique, prix barré (non compté dans le total)
+      didParseCell: (data) => {
+        if(data.section === 'body' && allProds[data.row.index] && allProds[data.row.index].annule){
+          data.cell.styles.textColor = [160, 160, 168];
+          data.cell.styles.fontStyle = 'italic';
+        }
+      },
+      didDrawCell: (data) => {
+        if(data.section === 'body' && data.column.index === 3 && allProds[data.row.index] && allProds[data.row.index].annule){
+          const txt = data.cell.text.join(' ');
+          const w = pdf.getTextWidth(txt);
+          const xEnd = data.cell.x + data.cell.width - data.cell.padding('right');
+          const yMid = data.cell.y + data.cell.height / 2;
+          pdf.setDrawColor(160, 160, 168);
+          pdf.setLineWidth(0.3);
+          pdf.line(xEnd - w, yMid, xEnd, yMid);
+        }
       }
     });
 
@@ -4967,7 +5014,7 @@
   function updateBrowserThemeColor(){
     const isLight = document.documentElement.classList.contains('light');
     const isLivreur = document.body.classList.contains('livreur-theme');
-    const color = isLight ? (isLivreur ? '#F4EBE0' : '#E9F2F5') : (isLivreur ? '#4A2F1F' : '#0B1D3A');
+    const color = isLight ? (isLivreur ? '#F4EBE0' : '#E9F2F5') : (isLivreur ? '#4A2F1F' : '#050A14');
     const meta = document.getElementById('themeColorMeta');
     if(meta) meta.setAttribute('content', color);
     document.documentElement.style.backgroundColor = color;
