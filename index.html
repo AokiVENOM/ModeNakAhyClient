@@ -23,7 +23,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Mode Nak'Ahy">
 <meta name="mobile-web-app-capable" content="yes">
-<title>APERÇU — Mode Nak'Ahy</title>
+<title>Répartition des clients — Mode Nak'Ahy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1744,7 +1744,7 @@
     }
 
     /* Liste des sacs plus compacte : sac + prix / client + statut / date */
-    #venBagsBody tr{
+    #venBagsBody tr, #venReturnBody tr{
       display:grid;
       grid-template-columns:1fr auto;
       grid-template-areas:"sac prix" "client statut" "date date";
@@ -1753,12 +1753,19 @@
       padding:12px 10px;
     }
     #venBagsBody td{padding:0;}
+    #venReturnBody td{padding:0;}
     #venBagsBody td:nth-child(1){grid-area:date;}
+    #venReturnBody td:nth-child(1){grid-area:date;}
     #venBagsBody td:nth-child(2){grid-area:sac;}
+    #venReturnBody td:nth-child(2){grid-area:sac;}
     #venBagsBody td:nth-child(3){grid-area:client;}
+    #venReturnBody td:nth-child(3){grid-area:client;}
     #venBagsBody td:nth-child(4){grid-area:statut; justify-self:end;}
+    #venReturnBody td:nth-child(4){grid-area:statut; justify-self:end;}
     #venBagsBody td:nth-child(5){grid-area:prix; justify-self:end;}
+    #venReturnBody td:nth-child(5){grid-area:prix; justify-self:end;}
     #venBagsBody .sale-date{font-size:12px;}
+    #venReturnBody .sale-date{font-size:12px;}
   }
 
   /* ===== Navbar flottante « pop-up » liquid glass, collante en haut ===== */
@@ -1978,6 +1985,48 @@
   .move-dialog .form-footer{margin-top:20px;}
   .btn-add:disabled{opacity:0.5; cursor:not-allowed;}
 
+
+  /* ===== Cartes de stats cliquables + bandeau « tous en attente » ===== */
+  .stat-link{cursor:pointer; -webkit-tap-highlight-color:transparent;}
+  .stat-link:active{transform:scale(0.97);}
+  .stat-link:focus-visible{outline:2px solid var(--glass-cyan); outline-offset:3px;}
+  .pending-all-banner{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    margin:0 0 14px; padding:10px 14px; border-radius:14px; font-size:13.5px;
+    background:rgba(255,196,90,0.10); border:1px solid rgba(255,196,90,0.35); color:var(--text);
+  }
+  .pending-all-banner strong{color:#FFC45A;}
+  html.light .pending-all-banner strong{color:#B57300;}
+  .pending-all-banner .btn-cancel{display:inline-flex !important; padding:6px 12px; font-size:12.5px;}
+
+
+  /* ===== Sac annulé dans une commande ===== */
+  .product-chip .chip-right{display:inline-flex; align-items:center; gap:6px;}
+  .chip-act{
+    width:20px; height:20px; padding:0; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:11px; line-height:1; cursor:pointer;
+    background:transparent; border:1px solid rgba(255,255,255,0.18); color:var(--text-dim);
+    opacity:0.55; transition:opacity .15s, color .15s, border-color .15s;
+  }
+  tr:hover .chip-act, .chip-act:focus-visible{opacity:1;}
+  .chip-act.cancel:hover{color:#FF8080; border-color:#FF8080;}
+  .chip-act.restore{opacity:0.9; color:#7FE3A5; border-color:rgba(127,227,165,0.5);}
+  @media (hover:none){ .chip-act{opacity:0.9; width:24px; height:24px;} }
+  .product-chip.is-cancelled{opacity:0.6;}
+  .product-chip.is-cancelled s{text-decoration-thickness:1.5px;}
+  .mini-cancel-tag{
+    font-style:normal; font-size:10px; font-weight:700; letter-spacing:.3px;
+    color:#FF8080; border:1px solid rgba(255,128,128,0.45); border-radius:999px; padding:1px 6px; margin-left:4px;
+  }
+  html.light .chip-act{border-color:rgba(14,42,54,0.18);}
+  html.light .mini-cancel-tag{color:#C0392B; border-color:rgba(192,57,43,0.4);}
+  .product-line.is-cancelled input{text-decoration:line-through; opacity:0.6;}
+  .product-line.is-cancelled::after{content:"Annulé"; align-self:center; font-size:11px; font-weight:700; color:#FF8080;}
+  .badge.return-reason{color:#FFB0B0; background:rgba(255,128,128,0.10); border:1px solid rgba(255,128,128,0.35); text-decoration:none;}
+  html.light .badge.return-reason{color:#C0392B;}
+  .return-count{color:#FF9C9C !important; background:rgba(255,128,128,0.12) !important; border-color:rgba(255,128,128,0.35) !important;}
+
   /* ===== Mode léger (téléphones / appareils peu puissants) ===== */
   html.perf-lite .blob{animation:none !important; filter:blur(50px);}
   html.perf-lite .blob3, html.perf-lite .blob4{display:none;}
@@ -2005,40 +2054,6 @@
   html.perf-lite.light .top-blur{background:linear-gradient(180deg, rgba(233,242,245,0.8), rgba(233,242,245,0));}
   html.perf-lite .app-nav.glass.is-stuck{background:rgba(16,38,58,0.82);}
   html.perf-lite.light .app-nav.glass.is-stuck{background:rgba(255,255,255,0.92);}
-
-  /* ===== APERÇU : verre plus discret + fond dégradé sombre ===== */
-  html:not(.light) body:not(.livreur-theme){
-    background-color:#060B16 !important;
-    background-image:
-      radial-gradient(70% 55% at 10% 0%, rgba(79,216,224,0.14), transparent 60%),
-      radial-gradient(55% 45% at 95% 15%, rgba(255,140,107,0.08), transparent 60%),
-      radial-gradient(60% 50% at 60% 100%, rgba(40,90,140,0.22), transparent 65%),
-      linear-gradient(165deg, #060B16 0%, #0A1626 45%, #0D2232 100%) !important;
-    background-attachment:fixed;
-  }
-  html:not(.light) .blob{opacity:0.16;}
-  html:not(.light) .blob2, html:not(.light) .blob4{opacity:0.08;}
-
-  /* Bordures des cartes réduites */
-  html:not(.light) .glass{
-    border:1px solid rgba(255,255,255,0.07) !important;
-    background:linear-gradient(160deg, rgba(255,255,255,0.065), rgba(255,255,255,0.025)) !important;
-    box-shadow:
-      0 10px 30px rgba(0,0,0,0.35),
-      inset 0 1px 0 rgba(255,255,255,0.10) !important;
-  }
-  html:not(.light) .glass::after{opacity:0.22 !important; padding:0.5px !important;}
-  html:not(.light) .glass:hover{box-shadow:0 12px 34px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12) !important;}
-  html:not(.light) .stat{border-radius:24px;}
-
-  /* Navbar et petits éléments assortis */
-  html:not(.light) .app-nav.glass{border-color:rgba(255,255,255,0.10) !important;}
-  html:not(.light) .export-btn, html:not(.light) .btn-cancel, html:not(.light) .icon-btn, html:not(.light) .status-pill{border-color:rgba(255,255,255,0.10) !important;}
-  html:not(.light) input, html:not(.light) select, html:not(.light) textarea{border-color:rgba(255,255,255,0.08) !important; background:rgba(0,0,0,0.22) !important;}
-  html:not(.light) .theme-color-fix{}
-
-  /* Mode léger (téléphones) : même fond, cartes un peu plus pleines */
-  html.perf-lite:not(.light) .glass{background:linear-gradient(160deg, rgba(22,40,58,0.85), rgba(14,28,44,0.85)) !important;}
 </style>
 </head>
 <body>
@@ -2249,15 +2264,15 @@
 
 
   <div class="stats">
-    <div class="glass stat">
+    <div class="glass stat stat-link" id="statClientsCard" role="button" tabindex="0" title="Voir la liste des clients">
       <span class="num" id="statClients">0</span>
       <span class="label">Clients</span>
     </div>
-    <div class="glass stat coral">
+    <div class="glass stat coral stat-link" id="statSacsCard" role="button" tabindex="0" title="Voir les sacs vendus">
       <span class="num" id="statSacs">0</span>
       <span class="label">Sacs commandés</span>
     </div>
-    <div class="glass stat">
+    <div class="glass stat stat-link" id="statAttenteCard" role="button" tabindex="0" title="Voir tous les clients en attente">
       <span class="num" id="statAttente">0</span>
       <span class="label">En attente</span>
     </div>
@@ -2391,6 +2406,10 @@
   </div>
 
   <div class="history-scroll status-filter-scroll" id="statusFilterScroll"></div>
+  <div class="pending-all-banner" id="pendingAllBanner" style="display:none;">
+    <span>⏳ Tous les clients <strong>en attente</strong> — toutes dates confondues</span>
+    <button type="button" class="btn-cancel" id="pendingAllExit">✕ Revenir à la période</button>
+  </div>
 
   <div class="glass table-panel">
     <div class="table-scroll">
@@ -2533,6 +2552,28 @@
         </table>
       </div>
       <div class="empty" id="venClientsEmpty">Aucun client pour cette période.</div>
+    </div>
+
+    <div class="glass table-panel" id="salesReturnPanel">
+      <div class="panel-title">
+        <span>Sacs annulés — à nouveau disponibles</span>
+        <span class="panel-count return-count" id="venReturnCount">0</span>
+      </div>
+      <div class="table-scroll">
+        <table class="sales-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Sac</th>
+              <th>Client</th>
+              <th>Raison</th>
+              <th>Prix</th>
+            </tr>
+          </thead>
+          <tbody id="venReturnBody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="venReturnEmpty">Aucun sac annulé pour cette période.</div>
     </div>
 
     <div class="glass table-summary">
@@ -2837,7 +2878,7 @@
     allPill.type = 'button';
     allPill.className = 'status-pill' + (statusFilter === null ? ' active' : '');
     allPill.textContent = 'Tout';
-    allPill.addEventListener('click', () => { statusFilter = null; renderStatusFilter(); render(); });
+    allPill.addEventListener('click', () => { statusFilter = null; setPendingAllMode(false); renderStatusFilter(); render(); });
     statusFilterScroll.appendChild(allPill);
 
     statusFilterOrder.forEach(key => {
@@ -2845,10 +2886,60 @@
       btn.type = 'button';
       btn.className = 'status-pill' + (statusFilter === key ? ' active' : '');
       btn.textContent = badgeMeta[key].label;
-      btn.addEventListener('click', () => { statusFilter = key; renderStatusFilter(); render(); });
+      btn.addEventListener('click', () => { statusFilter = key; setPendingAllMode(false); renderStatusFilter(); render(); });
       statusFilterScroll.appendChild(btn);
     });
   }
+
+  // ===== Cartes de statistiques cliquables =====
+  let pendingAllMode = false;
+  function setPendingAllMode(on){
+    pendingAllMode = !!on;
+    const banner = document.getElementById('pendingAllBanner');
+    if(banner) banner.style.display = pendingAllMode ? 'flex' : 'none';
+  }
+  function scrollToEl(el){
+    if(!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - 90;
+    window.scrollTo({ top: Math.max(0, y), behavior: document.documentElement.classList.contains('perf-lite') ? 'auto' : 'smooth' });
+  }
+  function goToClientsList(){
+    if(typeof switchView === 'function' && currentViewShown !== 'clients') switchView('clients');
+    scrollToEl(document.querySelector('#clientsView .search-row') || document.getElementById('tableBody'));
+  }
+  function goToBags(){
+    if(currentUserRole === 'livreur'){ goToClientsList(); return; }
+    // même période que l'onglet Clients
+    try {
+      salesFilterMonthEl.value = filterMonthEl.value;
+      if([...salesFilterYearEl.options].some(o => o.value === filterYearEl.value)) salesFilterYearEl.value = filterYearEl.value;
+      populateSalesWeekSelect();
+      if([...salesFilterWeekEl.options].some(o => o.value === filterWeekEl.value)) salesFilterWeekEl.value = filterWeekEl.value;
+      applySalesFilter();
+    } catch (err) {}
+    switchView('ventes');
+    applySalesMode('sacs');
+    setTimeout(() => scrollToEl(document.getElementById('salesMode')), 60);
+  }
+  function showAllPending(){
+    statusFilter = 'attente';
+    setPendingAllMode(true);
+    renderStatusFilter();
+    render();
+    goToClientsList();
+  }
+  [['statClientsCard', goToClientsList], ['statSacsCard', goToBags], ['statAttenteCard', showAllPending]].forEach(([id, fn]) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('click', fn);
+    el.addEventListener('keydown', (e) => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fn(); } });
+  });
+  document.getElementById('pendingAllExit').addEventListener('click', () => {
+    statusFilter = null;
+    setPendingAllMode(false);
+    renderStatusFilter();
+    render();
+  });
 
   const paiementLabels = {
     especes: 'Espèces',
@@ -2969,6 +3060,7 @@
   }
 
   function applyManualFilter(){
+    if(pendingAllMode){ setPendingAllMode(false); statusFilter = null; renderStatusFilter(); }
     const month = filterMonthEl.value;
     const year = filterYearEl.value;
     historyFilter = month ? `${year}-${month}` : year;
@@ -3423,7 +3515,7 @@
     fraisMontantWrap.style.display = fraisBool.value === 'oui' ? 'flex' : 'none';
   });
 
-  function addProductLine(nomVal, prixVal){
+  function addProductLine(nomVal, prixVal, annuleVal){
     lineId++;
     const row = document.createElement('div');
     row.className = 'product-line';
@@ -3438,6 +3530,11 @@
       <button type="button" class="remove-line" title="Retirer ce produit">&times;</button>
     `;
     productLines.appendChild(row);
+    if(annuleVal){
+      row.dataset.annule = '1';
+      row.classList.add('is-cancelled');
+      row.querySelector('.prod-name').title = 'Sac annulé (non pris à la livraison)';
+    }
     if(nomVal !== undefined) row.querySelector('.prod-name').value = nomVal;
     if(prixVal !== undefined) row.querySelector('.prod-price').value = prixVal;
     row.querySelector('.remove-line').addEventListener('click', () => {
@@ -3629,7 +3726,7 @@
     updateClientHint();
 
     productLines.innerHTML = '';
-    o.produits.forEach(p => addProductLine(p.nom, p.prix));
+    o.produits.forEach(p => addProductLine(p.nom, p.prix, !!p.annule));
 
     formPanel.classList.add('editing');
     submitBtn.textContent = 'Enregistrer les modifications';
@@ -3662,7 +3759,9 @@
       const nomProduit = row.querySelector('.prod-name').value.trim();
       const prix = parseFloat(row.querySelector('.prod-price').value) || 0;
       if(nomProduit){
-        produits.push({nom: nomProduit, prix});
+        const item = {nom: nomProduit, prix};
+        if(row.dataset.annule === '1') item.annule = true;
+        produits.push(item);
       }
     });
 
@@ -3705,8 +3804,35 @@
     if(expandedId === id) expandedId = null;
   }
 
+  // Annuler / rétablir un sac précis d'une commande
+  async function toggleProductCancel(orderId, idx){
+    const o = orders.find(x => x.id === orderId);
+    if(!o || !o.produits || !o.produits[idx]) return;
+    const p = o.produits[idx];
+    const willCancel = !p.annule;
+    const msg = willCancel
+      ? `Annuler « ${p.nom} » pour ${o.nom} ?\n\nLe sac ne sera plus compté dans les totaux et redevient disponible.`
+      : `Rétablir « ${p.nom} » pour ${o.nom} ?`;
+    if(!confirm(msg)) return;
+    const produits = o.produits.map((x, i) => {
+      if(i !== idx) return x;
+      const copy = { nom: x.nom, prix: x.prix };
+      if(willCancel){ copy.annule = true; copy.annuleLe = todayStr(); }
+      return copy;
+    });
+    try {
+      await updateDoc(doc(db, 'commandes', orderId), { produits });
+    } catch (err) {
+      console.error(err);
+      alert("Impossible d'enregistrer le changement. Vérifiez la connexion.");
+    }
+  }
+
+  // Sacs non annulés (un sac peut être annulé à la livraison)
+  function activeProduits(o){ return (o.produits || []).filter(p => !p.annule); }
+  function cancelledProduits(o){ return (o.produits || []).filter(p => p.annule); }
   function produitsTotal(o){
-    return o.produits.reduce((s,p) => s + p.prix, 0);
+    return activeProduits(o).reduce((s,p) => s + (Number(p.prix) || 0), 0);
   }
 
   function orderGrandTotal(o){
@@ -3767,6 +3893,7 @@
       }
       const matchesStatus = !statusFilter || o.statut === statusFilter;
       const matchesLive = !liveFilter || (o.live || '').trim() === liveFilter;
+      if(pendingAllMode) return matchesSearch && o.statut === 'attente';
       return matchesSearch && matchesHistory && matchesWeek && matchesStatus && matchesLive;
     });
   }
@@ -3803,7 +3930,7 @@
     const rows = list.map(o => [
       o.nom,
       o.tel || '—',
-      o.produits.map(p => `${p.nom}  (${formatArPdf(p.prix)})`).join('\n') + (o.description ? `\nNote : ${o.description}` : ''),
+      o.produits.map(p => p.annule ? `[Annulé] ${p.nom}` : `${p.nom}  (${formatArPdf(p.prix)})`).join('\n') + (o.description ? `\nNote : ${o.description}` : ''),
       formatArPdf(orderGrandTotal(o)),
       badgeMeta[o.statut]?.label || o.statut,
       paiementLabels[o.modePaiement] || '—',
@@ -3952,7 +4079,7 @@
 
     // Tableau des produits
     const startY = Math.max(cy, dy) + 8;
-    const body = (o.produits || []).map((p, i) => [String(i + 1), p.nom || '—', '1', formatArPdf(Number(p.prix) || 0)]);
+    const body = activeProduits(o).map((p, i) => [String(i + 1), p.nom || '—', '1', formatArPdf(Number(p.prix) || 0)]);
     pdf.autoTable({
       startY,
       margin: { left: 14, right: 14 },
@@ -4011,7 +4138,7 @@
     const data = list.map(o => ({
       'Client': o.nom,
       'Téléphone': o.tel || '',
-      'Produits': o.produits.map(p => `${p.nom} (${p.prix} Ar)`).join(', '),
+      'Produits': o.produits.map(p => p.annule ? `${p.nom} (ANNULÉ)` : `${p.nom} (${p.prix} Ar)`).join(', '),
       'Total (Ar)': orderGrandTotal(o),
       'Statut': badgeMeta[o.statut]?.label || o.statut,
       'Mode de paiement': paiementLabels[o.modePaiement] || '',
@@ -4062,11 +4189,13 @@
         if(o.id === editingId) tr.classList.add('editing-row');
         if(isOpen) tr.classList.add('expanded');
         const meta = badgeMeta[o.statut];
-        const chips = o.produits.map(p =>
-          `<div class="product-chip"><span>${escapeHtml(p.nom)}</span><span>${formatAr(p.prix)}</span></div>`
+        const chips = o.produits.map((p, idx) => p.annule
+          ? `<div class="product-chip is-cancelled"><span><s>${escapeHtml(p.nom)}</s> <em class="mini-cancel-tag">Annulé</em></span><span class="chip-right"><s>${formatAr(p.prix)}</s><button type="button" class="chip-act restore" data-prod-idx="${idx}" title="Rétablir ce sac" aria-label="Rétablir ce sac">↺</button></span></div>`
+          : `<div class="product-chip"><span>${escapeHtml(p.nom)}</span><span class="chip-right">${formatAr(p.prix)}<button type="button" class="chip-act cancel" data-prod-idx="${idx}" title="Annuler ce sac (non pris)" aria-label="Annuler ce sac">✕</button></span></div>`
         ).join('');
-        const chipsTotal = o.produits.length > 1
-          ? `<div class="product-chip product-chip-total"><span>Total sacs (${o.produits.length})</span><span>${formatAr(produitsTotal(o))}</span></div>`
+        const nbActifs = activeProduits(o).length;
+        const chipsTotal = (o.produits.length > 1 && nbActifs > 0)
+          ? `<div class="product-chip product-chip-total"><span>Total sacs (${nbActifs})</span><span>${formatAr(produitsTotal(o))}</span></div>`
           : '';
         const clientCount = nameCounts[o.nom.trim().toLowerCase()] || 1;
         const repeatBadge = clientCount > 1
@@ -4096,6 +4225,12 @@
             <button class="icon-btn del-btn" data-action="del" title="Supprimer" aria-label="Supprimer">${iconTrash}</button>
           </td>
         `;
+        tr.querySelectorAll('.chip-act').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleProductCancel(o.id, parseInt(btn.dataset.prodIdx, 10));
+          });
+        });
         tr.querySelector('[data-action="invoice"]').addEventListener('click', (e) => {
           e.stopPropagation();
           generateInvoice(o);
@@ -4140,7 +4275,7 @@
       });
     }
 
-    const sacsCount = orders.reduce((s,o) => s + o.produits.length, 0);
+    const sacsCount = orders.reduce((s,o) => s + activeProduits(o).length, 0);
     const totalAr = orders.filter(countsTowardTotal).reduce((s,o) => s + orderGrandTotal(o), 0);
 
     animateNumber(document.getElementById('statClients'), orders.length, n => String(n));
@@ -4150,7 +4285,7 @@
 
     const sumNoFrais = filtered.filter(countsTowardTotal).reduce((s,o) => s + produitsTotal(o), 0);
     const sumWithFrais = filtered.filter(countsTowardTotal).reduce((s,o) => s + orderGrandTotal(o), 0);
-    document.getElementById('summaryLabel').textContent = `Total — ${filterLabel(historyFilter, weekFilter)}`;
+    document.getElementById('summaryLabel').textContent = pendingAllMode ? 'Total — tous les clients en attente' : `Total — ${filterLabel(historyFilter, weekFilter)}`;
     document.getElementById('sumNoFrais').textContent = formatAr(sumNoFrais);
     document.getElementById('sumWithFrais').textContent = formatAr(sumWithFrais);
 
@@ -4633,7 +4768,7 @@
 
     const bags = [];
     periodOrders.forEach(o => {
-      (o.produits || []).forEach(p => {
+      activeProduits(o).forEach(p => {
         bags.push({ date: o.dateCommande || '', sac: p.nom, client: o.nom, prix: Number(p.prix) || 0, statut: o.statut });
       });
     });
@@ -4645,10 +4780,39 @@
       if(!groups.has(key)) groups.set(key, { nom: (o.nom || '').trim(), commandes: 0, sacs: 0, total: 0 });
       const g = groups.get(key);
       g.commandes += 1;
-      g.sacs += (o.produits || []).length;
+      g.sacs += activeProduits(o).length;
       g.total += produitsTotal(o);
     });
     const clientsList = [...groups.values()].sort((a, b) => b.total - a.total);
+
+    // Sacs annulés (sac précis annulé, ou commande entière « Annulé ») → à nouveau disponibles
+    const returned = [];
+    orders.filter(o => inPeriod(o.dateCommande, salesHistoryFilter, salesWeekFilter)).forEach(o => {
+      (o.produits || []).forEach(p => {
+        if(p.annule || o.statut === 'annule'){
+          returned.push({ date: o.dateCommande || '', sac: p.nom, client: o.nom, prix: Number(p.prix) || 0,
+            raison: p.annule ? 'Non pris à la livraison' : 'Commande annulée' });
+        }
+      });
+    });
+    returned.sort((a, b) => b.date.localeCompare(a.date));
+    const venReturnBody = document.getElementById('venReturnBody');
+    if(venReturnBody){
+      venReturnBody.innerHTML = '';
+      returned.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="sale-date">${formatDate(r.date)}</span></td>
+          <td><span class="sale-bag">${escapeHtml(r.sac)}</span></td>
+          <td><span class="sale-unit sale-unit-mobile">Client :</span> <span class="sale-client">${escapeHtml(r.client)}</span></td>
+          <td><span class="badge return-reason">${r.raison}</span></td>
+          <td class="sale-price">${formatAr(r.prix)}</td>
+        `;
+        venReturnBody.appendChild(tr);
+      });
+      document.getElementById('venReturnEmpty').style.display = returned.length ? 'none' : 'block';
+      document.getElementById('venReturnCount').textContent = String(returned.length);
+    }
 
     // Tableau des sacs
     venBagsBody.innerHTML = '';
@@ -4704,6 +4868,7 @@
     if(!['tout','sacs','clients'].includes(mode)) mode = 'tout';
     document.getElementById('salesBagsPanel').style.display = mode === 'clients' ? 'none' : '';
     document.getElementById('salesClientsPanel').style.display = mode === 'sacs' ? 'none' : '';
+    const rp = document.getElementById('salesReturnPanel'); if(rp) rp.style.display = mode === 'clients' ? 'none' : '';
     document.querySelectorAll('#salesMode .status-pill').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.mode === mode);
     });
