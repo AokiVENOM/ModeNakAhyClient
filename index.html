@@ -2053,6 +2053,29 @@
   .glass::after{opacity:0.25; padding:0.5px;}
   html.light .glass::after{opacity:0.5;}
 
+
+  /* ===== Aucune animation sur le verre ===== */
+  .glass, .glass::before, .glass::after, .stat, .app-nav.glass{
+    animation:none !important;
+    transition:none !important;
+  }
+  .glass::before{display:none !important;}           /* reflet qui balaie au survol */
+  .glass:hover, .stat:hover, .app-nav.glass.is-stuck{transform:none !important;}
+  .app-nav.glass::after{animation:none !important;}   /* reflet qui glisse sur la navbar */
+  .reveal{opacity:1 !important; transform:none !important; transition:none !important;}
+  .view-enter{animation:none !important;}
+
+
+  .status-pill.pill-sac-annule{border-color:rgba(255,128,128,0.35) !important; color:#FFB0B0;}
+  .status-pill.pill-sac-annule.active{background:linear-gradient(135deg,#FF8080,#E05A5A) !important; color:#fff !important; border-color:transparent !important; box-shadow:0 4px 14px rgba(255,100,100,0.35);}
+  html.light .status-pill.pill-sac-annule{color:#C0392B;}
+
+
+  .hint-werawera{display:inline-block; margin-top:4px; color:#FFB0B0;}
+  .hint-werawera strong{letter-spacing:.5px; color:#FF8080;}
+  html.light .hint-werawera{color:#A93226;}
+  html.light .hint-werawera strong{color:#C0392B;}
+
   /* ===== Mode léger (téléphones / appareils peu puissants) ===== */
   html.perf-lite .blob{animation:none !important; filter:blur(50px);}
   html.perf-lite .blob3, html.perf-lite .blob4{display:none;}
@@ -2258,7 +2281,8 @@
   <div class="period-bar">
     <div class="filter-hint">
       <span class="filter-hint-icon">⚠️</span>
-      Change la date ci-dessous si tu veux voir les commandes d'une période précise.
+      <span>Change la date ci-dessous si tu veux voir les commandes d'une période précise.<br>
+      <span class="hint-werawera">Les clients qui ne répondent pas ou annulé = <strong>WERAWERA</strong></span></span>
     </div>
 
     <div class="history-manual">
@@ -2915,6 +2939,15 @@
       btn.addEventListener('click', () => { statusFilter = key; setPendingAllMode(false); renderStatusFilter(); render(); });
       statusFilterScroll.appendChild(btn);
     });
+
+    // Filtre spécial : commandes avec au moins un sac annulé (non pris à la livraison)
+    const sacBtn = document.createElement('button');
+    sacBtn.type = 'button';
+    sacBtn.className = 'status-pill pill-sac-annule' + (statusFilter === 'sac_annule' ? ' active' : '');
+    const nbSacsAnnules = orders.reduce((n, o) => n + cancelledProduits(o).length, 0);
+    sacBtn.textContent = nbSacsAnnules ? `Sac annulé (${nbSacsAnnules})` : 'Sac annulé';
+    sacBtn.addEventListener('click', () => { statusFilter = 'sac_annule'; setPendingAllMode(false); renderStatusFilter(); render(); });
+    statusFilterScroll.appendChild(sacBtn);
   }
 
   // ===== Cartes de statistiques cliquables =====
@@ -3333,6 +3366,7 @@
         const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
         return tb - ta;
       });
+      renderStatusFilter();
       syncStatus.textContent = 'Synchronisé avec Firebase';
       syncStatus.classList.remove('loading', 'err');
       syncStatus.classList.add('ok');
@@ -3717,9 +3751,8 @@
     setFormCollapsed(!formPanel.classList.contains('collapsed'));
   });
 
-  try {
-    if(localStorage.getItem('nakahy-form-collapsed') === '1') setFormCollapsed(true);
-  } catch (err) {}
+  // Formulaire « Ajouter une commande » réduit par défaut à chaque ouverture
+  setFormCollapsed(true);
 
   function editOrder(id){
     const o = orders.find(x => x.id === id);
@@ -3917,7 +3950,7 @@
           matchesWeek = day >= startDay && day <= endDay;
         }
       }
-      const matchesStatus = !statusFilter || o.statut === statusFilter;
+      const matchesStatus = !statusFilter || (statusFilter === 'sac_annule' ? cancelledProduits(o).length > 0 : o.statut === statusFilter);
       const matchesLive = !liveFilter || (o.live || '').trim() === liveFilter;
       if(pendingAllMode) return matchesSearch && o.statut === 'attente';
       return matchesSearch && matchesHistory && matchesWeek && matchesStatus && matchesLive;
@@ -3934,7 +3967,7 @@
     if(!window.jspdf){ alert("La librairie PDF n'a pas pu se charger. Vérifiez votre connexion internet."); return; }
     const list = getFilteredOrders();
     const { jsPDF } = window.jspdf;
-    const docPdf = new jsPDF();
+    const docPdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     const pageWidth = docPdf.internal.pageSize.getWidth();
     const pageHeight = docPdf.internal.pageSize.getHeight();
 
@@ -3969,18 +4002,22 @@
       margin: { left: 14, right: 14, bottom: 18 },
       head: [['Client', 'Téléphone', 'Produits', 'Total', 'Statut', 'Paiement', 'Lieu', 'Frais']],
       body: rows,
-      styles: { fontSize: 7.5, cellPadding: 4, textColor: [45, 45, 50], lineColor: [228, 232, 233], lineWidth: 0.25, valign: 'top' },
-      headStyles: { fillColor: [18, 59, 79], textColor: 255, fontStyle: 'bold', fontSize: 8, halign: 'left' },
+      styles: { fontSize: 8.5, cellPadding: { top: 3.2, bottom: 3.2, left: 3, right: 3 }, textColor: [45, 45, 50], lineColor: [228, 232, 233], lineWidth: 0.25, valign: 'top', overflow: 'linebreak' },
+      headStyles: { fillColor: [18, 59, 79], textColor: 255, fontStyle: 'bold', fontSize: 9, halign: 'left', valign: 'middle' },
       alternateRowStyles: { fillColor: [244, 248, 249] },
+      // Format paysage : colonnes assez larges pour ne jamais couper un mot ou un numéro
       columnStyles: {
-        0: { cellWidth: 24, fontStyle: 'bold' },
-        1: { cellWidth: 22 },
-        2: { cellWidth: 40 },
-        3: { cellWidth: 18, halign: 'right', fontStyle: 'bold' },
-        4: { cellWidth: 22 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 20 },
-        7: { cellWidth: 16, halign: 'right' }
+        0: { cellWidth: 38, fontStyle: 'bold' },
+        1: { cellWidth: 27 },
+        2: { cellWidth: 'auto' },
+        3: { cellWidth: 30, halign: 'right', fontStyle: 'bold' },
+        4: { cellWidth: 28 },
+        5: { cellWidth: 28 },
+        6: { cellWidth: 34 },
+        7: { cellWidth: 22, halign: 'right' }
+      },
+      didParseCell: (data) => {
+        if(data.section === 'head' && (data.column.index === 3 || data.column.index === 7)) data.cell.styles.halign = 'right';
       },
       didDrawPage: (data) => {
         const pageCount = docPdf.internal.getNumberOfPages();
@@ -4996,6 +5033,7 @@
   // Apparition des panneaux au défilement
   (function scrollReveal(){
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return; // apparition animée des panneaux désactivée
     if(reduce || document.documentElement.classList.contains('perf-lite') || !('IntersectionObserver' in window)) return;
     const els = document.querySelectorAll('#appView .glass:not(input), .account-actions');
     const io = new IntersectionObserver((entries) => {
