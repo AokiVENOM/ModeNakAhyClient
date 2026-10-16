@@ -3050,6 +3050,32 @@
     return new Date(year, month, 0).getDate();
   }
 
+  // Semaines du calendrier (lundi → dimanche) à l'intérieur d'un mois.
+  // Ex. octobre 2026 : S1 = jeu 1 → dim 4, S2 = lun 5 → dim 11, S3 = lun 12 → dim 18…
+  const JOURS_COURTS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
+  function monthWeeks(year, month){
+    const total = daysInMonth(year, month);
+    const weeks = [];
+    let start = 1;
+    while(start <= total){
+      const dow = new Date(year, month - 1, start).getDay(); // 0 = dimanche
+      const toSunday = (7 - dow) % 7;
+      const end = Math.min(start + toSunday, total);
+      weeks.push({ start, end });
+      start = end + 1;
+    }
+    return weeks;
+  }
+  function weekOptionLabel(year, month, w, wk){
+    const d1 = JOURS_COURTS[new Date(year, month - 1, wk.start).getDay()];
+    const d2 = JOURS_COURTS[new Date(year, month - 1, wk.end).getDay()];
+    return wk.start === wk.end ? `Semaine ${w} (${d1} ${wk.start})` : `Semaine ${w} (${d1} ${wk.start} → ${d2} ${wk.end})`;
+  }
+  function dayInWeek(year, month, day, w){
+    const wk = monthWeeks(year, month)[w - 1];
+    return !!wk && day >= wk.start && day <= wk.end;
+  }
+
   function populateWeekSelect(){
     const month = filterMonthEl.value;
     const year = filterYearEl.value;
@@ -3061,19 +3087,16 @@
     }
 
     filterWeekEl.style.display = 'inline-block';
-    const total = daysInMonth(parseInt(year, 10), parseInt(month, 10));
-    const weeksCount = Math.ceil(total / 7);
+    const y = parseInt(year, 10), mo = parseInt(month, 10);
     const prevValue = filterWeekEl.value;
 
     filterWeekEl.innerHTML = '<option value="">Toutes les semaines</option>';
-    for(let w = 1; w <= weeksCount; w++){
-      const startDay = (w - 1) * 7 + 1;
-      const endDay = Math.min(w * 7, total);
+    monthWeeks(y, mo).forEach((wk, i) => {
       const opt = document.createElement('option');
-      opt.value = String(w);
-      opt.textContent = `Semaine ${w} (${startDay}–${endDay})`;
+      opt.value = String(i + 1);
+      opt.textContent = weekOptionLabel(y, mo, i + 1, wk);
       filterWeekEl.appendChild(opt);
-    }
+    });
     filterWeekEl.value = [...filterWeekEl.options].some(o => o.value === prevValue) ? prevValue : '';
   }
 
@@ -3945,9 +3968,7 @@
           matchesWeek = false;
         } else {
           const day = parseInt(o.dateCommande.slice(8, 10), 10);
-          const startDay = (weekFilter - 1) * 7 + 1;
-          const endDay = weekFilter * 7;
-          matchesWeek = day >= startDay && day <= endDay;
+          matchesWeek = dayInWeek(parseInt(historyFilter.slice(0, 4), 10), parseInt(historyFilter.slice(5, 7), 10), day, weekFilter);
         }
       }
       const matchesStatus = !statusFilter || (statusFilter === 'sac_annule' ? cancelledProduits(o).length > 0 : o.statut === statusFilter);
@@ -4518,7 +4539,7 @@
     if(!dateStr || !dateStr.startsWith(hf)) return false;
     if(wf && hf.length === 7){
       const day = parseInt(dateStr.slice(8, 10), 10);
-      return day >= (wf - 1) * 7 + 1 && day <= wf * 7;
+      return dayInWeek(parseInt(hf.slice(0, 4), 10), parseInt(hf.slice(5, 7), 10), day, wf);
     }
     return true;
   }
@@ -4549,15 +4570,15 @@
       return;
     }
     depFilterWeekEl.style.display = 'inline-block';
-    const total = daysInMonth(parseInt(depFilterYearEl.value, 10), parseInt(month, 10));
+    const yy = parseInt(depFilterYearEl.value, 10), mm = parseInt(month, 10);
     const prev = depFilterWeekEl.value;
     depFilterWeekEl.innerHTML = '<option value="">Toutes les semaines</option>';
-    for(let w = 1; w <= Math.ceil(total / 7); w++){
+    monthWeeks(yy, mm).forEach((wk, i) => {
       const opt = document.createElement('option');
-      opt.value = String(w);
-      opt.textContent = `Semaine ${w} (${(w - 1) * 7 + 1}–${Math.min(w * 7, total)})`;
+      opt.value = String(i + 1);
+      opt.textContent = weekOptionLabel(yy, mm, i + 1, wk);
       depFilterWeekEl.appendChild(opt);
-    }
+    });
     depFilterWeekEl.value = [...depFilterWeekEl.options].some(o => o.value === prev) ? prev : '';
   }
 
@@ -4793,15 +4814,15 @@
       return;
     }
     salesFilterWeekEl.style.display = 'inline-block';
-    const total = daysInMonth(parseInt(salesFilterYearEl.value, 10), parseInt(month, 10));
+    const yy = parseInt(salesFilterYearEl.value, 10), mm = parseInt(month, 10);
     const prev = salesFilterWeekEl.value;
     salesFilterWeekEl.innerHTML = '<option value="">Toutes les semaines</option>';
-    for(let w = 1; w <= Math.ceil(total / 7); w++){
+    monthWeeks(yy, mm).forEach((wk, i) => {
       const opt = document.createElement('option');
-      opt.value = String(w);
-      opt.textContent = `Semaine ${w} (${(w - 1) * 7 + 1}–${Math.min(w * 7, total)})`;
+      opt.value = String(i + 1);
+      opt.textContent = weekOptionLabel(yy, mm, i + 1, wk);
       salesFilterWeekEl.appendChild(opt);
-    }
+    });
     salesFilterWeekEl.value = [...salesFilterWeekEl.options].some(o => o.value === prev) ? prev : '';
   }
 
